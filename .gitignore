@@ -28,3 +28,6 @@ playground.xcworkspace
 
 # Archives
 *.xcarchive
+
+# Superpowers
+.superpowers/
