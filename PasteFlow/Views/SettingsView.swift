@@ -1,6 +1,28 @@
 import ServiceManagement
 import SwiftUI
 
+private let settingsLabelWidth: CGFloat = 120
+
+struct SettingsRow<Content: View>: View {
+    let label: String
+    let content: Content
+
+    init(_ label: String, @ViewBuilder content: () -> Content) {
+        self.label = label
+        self.content = content()
+    }
+
+    var body: some View {
+        HStack(alignment: .center) {
+            Text(label)
+                .foregroundColor(.secondary)
+                .frame(width: settingsLabelWidth, alignment: .trailing)
+            content
+            Spacer()
+        }
+    }
+}
+
 struct SettingsView: View {
     @EnvironmentObject var appState: AppState
     @AppStorage("retentionDays") private var retentionDays: Int = 30
@@ -14,61 +36,78 @@ struct SettingsView: View {
             storageTab.tabItem { Label("Storage", systemImage: "internaldrive") }
             healthCheckTab.tabItem { Label("Health", systemImage: "stethoscope") }
             aboutTab.tabItem { Label("About", systemImage: "info.circle") }
-        }.frame(width: 400, height: 280)
+        }.frame(width: 480, height: 280)
     }
 
     private var generalTab: some View {
-        Form {
-            Toggle("Launch at login", isOn: $launchAtLogin)
-                .onChange(of: launchAtLogin) { newValue in
-                    do {
-                        if newValue { try SMAppService.mainApp.register() }
-                        else { try SMAppService.mainApp.unregister() }
-                    } catch { launchAtLogin = !newValue }
-                }
-            LabeledContent("Global hotkey") {
-                Text("Cmd+Shift+V").foregroundColor(.secondary)
+        VStack(alignment: .leading, spacing: 16) {
+            SettingsRow("Startup") {
+                Toggle("Launch at login", isOn: $launchAtLogin)
+                    .toggleStyle(.checkbox)
+                    .onChange(of: launchAtLogin) { newValue in
+                        do {
+                            if newValue { try SMAppService.mainApp.register() }
+                            else { try SMAppService.mainApp.unregister() }
+                        } catch { launchAtLogin = !newValue }
+                    }
             }
-        }.padding()
+
+            SettingsRow("Global Hotkey") {
+                Text("Cmd+Shift+V")
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(nsColor: .controlBackgroundColor))
+                    .cornerRadius(6)
+            }
+
+            Spacer()
+        }.padding(.top, 20).padding(.horizontal, 24)
     }
 
     private var storageTab: some View {
-        Form {
-            Picker("Keep history for", selection: $retentionDays) {
-                ForEach(retentionOptions, id: \.self) { Text("\($0) days").tag($0) }
-            }
-            Button("Clear All History") { showClearConfirmation = true }
-                .alert("Clear All History?", isPresented: $showClearConfirmation) {
-                    Button("Cancel", role: .cancel) {}
-                    Button("Clear", role: .destructive) {
-                        do {
-                            try appState.storage.deleteExpired(olderThan: 0)
-                            appState.reloadItems()
-                        } catch {}
-                    }
-                } message: {
-                    Text("This will permanently delete all clipboard history. This cannot be undone.")
+        VStack(alignment: .leading, spacing: 16) {
+            SettingsRow("Retention") {
+                Picker("", selection: $retentionDays) {
+                    ForEach(retentionOptions, id: \.self) { Text("\($0) days").tag($0) }
                 }
-        }.padding()
+                .labelsHidden()
+                .frame(width: 120)
+            }
+
+            SettingsRow("History") {
+                Button("Clear All History") { showClearConfirmation = true }
+                    .alert("Clear All History?", isPresented: $showClearConfirmation) {
+                        Button("Cancel", role: .cancel) {}
+                        Button("Clear", role: .destructive) {
+                            do {
+                                try appState.storage.deleteExpired(olderThan: 0)
+                                appState.reloadItems()
+                            } catch {}
+                        }
+                    } message: {
+                        Text("This will permanently delete all clipboard history. This cannot be undone.")
+                    }
+            }
+
+            Spacer()
+        }.padding(.top, 20).padding(.horizontal, 24)
     }
 
     private var healthCheckTab: some View {
-        Form {
-            LabeledContent("Data size") {
+        VStack(alignment: .leading, spacing: 16) {
+            SettingsRow("Data Size") {
                 Text(ByteCountFormatter.string(
                     fromByteCount: appState.storage.dataSize(),
                     countStyle: .file
                 ))
-                .foregroundColor(.secondary)
             }
 
-            LabeledContent("Accessibility") {
+            SettingsRow("Accessibility") {
                 if PasteSimulator.isAccessibilityGranted {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
                         Text("Granted")
-                            .foregroundColor(.secondary)
                     }
                 } else {
                     HStack(spacing: 8) {
@@ -76,7 +115,6 @@ struct SettingsView: View {
                             Image(systemName: "xmark.circle.fill")
                                 .foregroundColor(.red)
                             Text("Not granted")
-                                .foregroundColor(.secondary)
                         }
                         Button("Open Settings") {
                             PasteSimulator.requestAccessibility()
@@ -84,7 +122,9 @@ struct SettingsView: View {
                     }
                 }
             }
-        }.padding()
+
+            Spacer()
+        }.padding(.top, 20).padding(.horizontal, 24)
     }
 
     private var aboutTab: some View {
