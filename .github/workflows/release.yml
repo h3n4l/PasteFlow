@@ -10,19 +10,30 @@ jobs:
     # Only run on release/* branches
     if: startsWith(github.ref_name, 'release/')
     steps:
-      - name: Extract version from branch name
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate version
         id: version
         run: |
-          VERSION="${GITHUB_REF_NAME#release/}"
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          # Extract version from branch name
+          BRANCH_VERSION="${GITHUB_REF_NAME#release/}"
+          if [[ ! "$BRANCH_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Error: Branch name must be release/x.x.x (got: $GITHUB_REF_NAME)"
             exit 1
           fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "Version: $VERSION"
 
-      - name: Checkout
-        uses: actions/checkout@v4
+          # Read version from VERSION file
+          FILE_VERSION="$(cat VERSION | tr -d '[:space:]')"
+
+          # Validate they match
+          if [[ "$BRANCH_VERSION" != "$FILE_VERSION" ]]; then
+            echo "Error: Branch version ($BRANCH_VERSION) does not match VERSION file ($FILE_VERSION)"
+            exit 1
+          fi
+
+          echo "version=$FILE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $FILE_VERSION"
 
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
@@ -30,10 +41,9 @@ jobs:
       - name: Install create-dmg
         run: brew install create-dmg
 
-      - name: Set version in Xcode project
+      - name: Inject version into Xcode project
         run: |
           VERSION="${{ steps.version.outputs.version }}"
-          # Update MARKETING_VERSION in all build configurations
           sed -i '' "s/MARKETING_VERSION = .*;/MARKETING_VERSION = $VERSION;/g" \
             PasteFlow.xcodeproj/project.pbxproj
 
