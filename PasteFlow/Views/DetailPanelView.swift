@@ -118,11 +118,6 @@ struct DetailPanelView: View {
                     .background(Color(hex: 0xEEEDFE)).cornerRadius(6)
                     .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(hex: 0xE5E5E5), lineWidth: 1))
             }.buttonStyle(.plain)
-            Button(action: { onDelete(item) }) {
-                Text("Delete").font(.system(size: 11)).foregroundColor(Color(hex: 0x3C3489))
-                    .padding(.horizontal, 10).padding(.vertical, 4).cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(hex: 0xE5E5E5), lineWidth: 1))
-            }.buttonStyle(.plain)
             if case .file = item.content {
                 Button(action: { onCopyPath?(item) }) {
                     Text("Copy Path").font(.system(size: 11)).foregroundColor(Color(hex: 0x3C3489))
@@ -131,6 +126,11 @@ struct DetailPanelView: View {
                         .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(hex: 0xE5E5E5), lineWidth: 1))
                 }.buttonStyle(.plain)
             }
+            Button(action: { onDelete(item) }) {
+                Text("Delete").font(.system(size: 11)).foregroundColor(Color(hex: 0x3C3489))
+                    .padding(.horizontal, 10).padding(.vertical, 4).cornerRadius(6)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(hex: 0xE5E5E5), lineWidth: 1))
+            }.buttonStyle(.plain)
         }
     }
 }
