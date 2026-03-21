@@ -76,6 +76,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appState.isPanelVisible = visible
         if visible {
             appState.reloadItems()
+            appState.selectedItem = appState.clipboardItems.first
             appState.isAccessibilityGranted = PasteSimulator.isAccessibilityGranted
         }
     }
