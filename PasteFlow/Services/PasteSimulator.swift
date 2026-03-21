@@ -49,16 +49,26 @@ enum PasteSimulator {
     }
 
     private static func simulateCmdV() {
-        let source = CGEventSource(stateID: .hidSystemState)
-        guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: true),
-              let keyUp = CGEvent(keyboardEventSource: source, virtualKey: 0x09, keyDown: false)
+        // Based on Maccy/Clipy's proven approach:
+        // - Use .combinedSessionState for better keyboard state tracking
+        // - Suppress local events during paste to prevent interference
+        // - Post to .cgSessionEventTap (session level, more reliable than .cghidEventTap)
+        let source = CGEventSource(stateID: .combinedSessionState)
+        source?.setLocalEventsFilterDuringSuppressionState(
+            [.permitLocalMouseEvents, .permitSystemDefinedEvents],
+            state: .eventSuppressionStateSuppressionInterval
+        )
+
+        let vKeyCode: CGKeyCode = 0x09 // V key
+        guard let keyDown = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: true),
+              let keyUp = CGEvent(keyboardEventSource: source, virtualKey: vKeyCode, keyDown: false)
         else {
             logger.error("Failed to create CGEvent for paste simulation")
             return
         }
         keyDown.flags = .maskCommand
         keyUp.flags = .maskCommand
-        keyDown.post(tap: .cghidEventTap)
-        keyUp.post(tap: .cghidEventTap)
+        keyDown.post(tap: .cgSessionEventTap)
+        keyUp.post(tap: .cgSessionEventTap)
     }
 }
