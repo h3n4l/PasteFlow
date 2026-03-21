@@ -48,9 +48,10 @@ The existing release workflow already produces `PasteFlow-x.y.z.dmg`, which sati
 ## Dependencies & Build Configuration
 
 - Add **s1ntoneli/AppUpdater** via Swift Package Manager
-- Add a compile flag `ENABLE_AUTO_UPDATE` to the build settings
-  - Set to `true` for the direct-download build (current)
-  - Can be set to `false` for a future App Store target
+  - Confirm compatibility with macOS 13.0+ (PasteFlow's minimum deployment target)
+- Add `ENABLE_AUTO_UPDATE` to `SWIFT_ACTIVE_COMPILATION_CONDITIONS` at the project level
+  - Set for all current build configurations (Debug and Release)
+  - Can be removed for a future App Store target
 - All update-related code is gated behind `#if ENABLE_AUTO_UPDATE`
 
 ## UpdateService
@@ -59,6 +60,9 @@ A new service at `PasteFlow/Services/UpdateService.swift`:
 
 - Conforms to `ObservableObject` (consistent with existing services)
 - Wraps AppUpdater's API
+- Initialized with the GitHub repository owner/name: `"h3n4l"` / `"PasteFlow"` (hardcoded — this is the canonical source)
+- All `@Published` property updates are dispatched on the main thread (required for SwiftUI)
+- `checkForUpdates()` and `installUpdate()` are async methods, called via `Task { @MainActor in ... }`
 
 ### Properties
 
@@ -66,7 +70,7 @@ A new service at `PasteFlow/Services/UpdateService.swift`:
 |----------|------|-------------|
 | `updateAvailable` | `Bool` | Whether a newer version was found |
 | `newVersion` | `String?` | The version string of the available update |
-| `isDownloading` | `Bool` | Whether an update is being downloaded/installed |
+| `isDownloading` | `Bool` | Whether an update is being downloaded/installed (may need adaptation based on AppUpdater's actual API surface) |
 | `error` | `String?` | Error message to display to user |
 
 ### Methods
@@ -91,7 +95,7 @@ No periodic background checks while the app is running.
 
 ### Settings View
 
-Add an "Updates" section to the existing Settings view:
+Add update UI to the existing **About** tab in Settings (which already shows version info — avoid duplicating it in a separate tab):
 
 - Display current version (from `Bundle.main`)
 - "Check for Updates" button
@@ -106,17 +110,20 @@ Add an "Updates" section to the existing Settings view:
 ### Menu Bar Indicator
 
 When an update is available:
-- Add an "Update Available" menu item to the menu bar menu
+- Add an "Update Available" menu item to the menu bar menu, conditionally shown based on `appState.updateAvailable`
+- Both `MenuBarMenuView14` and `MenuBarMenuView13` need updating (they access state via `appDelegate.appState`)
 - Clicking it opens the update prompt
 
 ### Update Prompt
 
-Simple alert dialog shown when an update is found (on launch or manual check):
+Simple alert dialog shown when a user triggers an update (from menu item or Settings):
 
 - Title: "Update Available"
 - Message: "PasteFlow vX.Y.Z is available. You're running vX.Y.Z."
 - Buttons: "Update Now" / "Later"
 - "Update Now" triggers download, replace, and relaunch
+
+**On launch:** No modal alert is shown. The launch check silently sets `updateAvailable = true` and the menu bar indicator appears. This avoids interrupting the user on every launch.
 
 ## Update Flow
 
@@ -141,6 +148,7 @@ Simple alert dialog shown when an update is found (on launch or manual check):
 | Signature mismatch | Abort update, show: "Update verification failed" |
 | Permission denied | Show error explaining user needs to move app or update manually |
 | Already up to date (manual) | Show: "You're running the latest version" |
+| Partial replacement failure | Delegated to AppUpdater — it performs atomic bundle replacement. If the move fails, the old app remains in place and an error is shown |
 
 ## Release Workflow
 
@@ -171,5 +179,6 @@ When a Mac App Store build is eventually created:
 | `PasteFlow/Services/UpdateService.swift` | Create | New update service |
 | `PasteFlow/State/AppState.swift` | Modify | Add UpdateService reference |
 | `PasteFlow/Views/SettingsView.swift` | Modify | Add Updates section |
-| `PasteFlow/App/PasteFlowApp.swift` or `AppDelegate.swift` | Modify | Trigger launch check |
+| `PasteFlow/App/AppDelegate.swift` | Modify | Trigger launch check in `applicationDidFinishLaunching` |
+| `PasteFlow/App/PasteFlowApp.swift` | Modify | Add "Update Available" to both `MenuBarMenuView14` and `MenuBarMenuView13` |
 | Build settings | Modify | Add `ENABLE_AUTO_UPDATE` flag |
