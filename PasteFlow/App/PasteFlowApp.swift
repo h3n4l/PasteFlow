@@ -28,6 +28,17 @@ struct MenuBarMenuView14: View {
         Button("Open PasteFlow") { appDelegate.togglePanel() }
             .keyboardShortcut("v", modifiers: [.command, .shift])
         Divider()
+        #if ENABLE_AUTO_UPDATE
+        if appDelegate.appState.updateService?.updateAvailable == true,
+           let version = appDelegate.appState.updateService?.newVersion {
+            Button("Update Available (\(version))") {
+                appDelegate.showSettings()
+                DispatchQueue.main.async {
+                    openSettings()
+                }
+            }
+        }
+        #endif
         Button("Settings...") {
                 appDelegate.showSettings()
                 DispatchQueue.main.async {
@@ -48,6 +59,17 @@ struct MenuBarMenuView13: View {
         Button("Open PasteFlow") { appDelegate.togglePanel() }
             .keyboardShortcut("v", modifiers: [.command, .shift])
         Divider()
+        #if ENABLE_AUTO_UPDATE
+        if appDelegate.appState.updateService?.updateAvailable == true,
+           let version = appDelegate.appState.updateService?.newVersion {
+            Button("Update Available (\(version))") {
+                appDelegate.showSettings()
+                DispatchQueue.main.async {
+                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                }
+            }
+        }
+        #endif
         Button("Settings...") {
             appDelegate.showSettings()
             DispatchQueue.main.async {
