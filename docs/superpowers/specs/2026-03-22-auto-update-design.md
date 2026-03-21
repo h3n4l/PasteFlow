@@ -11,7 +11,7 @@ Add check-for-update and update-in-place functionality to PasteFlow so users don
 
 - Users are notified when a new version is available
 - One-click update: download, replace, relaunch — no manual steps
-- Zero changes to the existing release workflow
+- Minimal changes to the existing release workflow (add zip asset for AppUpdater)
 - Designed to be excluded from a future App Store build
 
 ## Non-Goals
@@ -43,7 +43,7 @@ AppUpdater requires GitHub Release assets to follow the pattern:
 \(name)-\(semanticVersion).ext
 ```
 
-The existing release workflow already produces `PasteFlow-x.y.z.dmg`, which satisfies this requirement. No CI changes needed.
+The existing release workflow produces `PasteFlow-x.y.z.dmg`, but **AppUpdater only supports `.zip` and `.tar` archives** (not DMG). The release workflow must be updated to also produce a `PasteFlow-x.y.z.zip` asset alongside the DMG. The DMG remains for manual download; the zip is used by AppUpdater.
 
 ## Dependencies & Build Configuration
 
@@ -153,12 +153,13 @@ Simple alert dialog shown when a user triggers an update (from menu item or Sett
 
 ## Release Workflow
 
-No changes needed. The existing workflow:
+One change needed: add a zip asset alongside the DMG. The updated workflow:
 
 1. Validates version from `release/x.y.z` branch against `VERSION` file
 2. Builds Release configuration
-3. Creates `PasteFlow-x.y.z.dmg`
-4. Creates draft GitHub Release with DMG attached
+3. Creates `PasteFlow-x.y.z.dmg` (for manual download)
+4. Creates `PasteFlow-x.y.z.zip` (for AppUpdater auto-update)
+5. Creates draft GitHub Release with both assets attached
 
 Draft releases are not visible to AppUpdater. The release becomes discoverable once manually published — this is intentional, giving the maintainer a chance to review before users see it.
 
