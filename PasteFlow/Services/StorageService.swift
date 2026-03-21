@@ -4,11 +4,13 @@ import os.log
 
 final class StorageService {
     private let dbQueue: DatabaseQueue
+    private let databasePath: String
     let imagesDirectory: URL
     private let logger = Logger(subsystem: "com.github.h3n4l.PasteFlow", category: "Storage")
 
     init(databasePath: String, imagesDirectory: URL) throws {
         try FileManager.default.createDirectory(at: imagesDirectory, withIntermediateDirectories: true)
+        self.databasePath = databasePath
         self.imagesDirectory = imagesDirectory
         dbQueue = try DatabaseQueue(path: databasePath)
 
@@ -156,6 +158,29 @@ final class StorageService {
         let filename = "\(item.id.uuidString).\(format.rawValue)"
         let fileURL = imagesDirectory.appendingPathComponent(filename)
         return try? Data(contentsOf: fileURL)
+    }
+
+    /// Returns total data size in bytes (database + image files).
+    func dataSize() -> Int64 {
+        var total: Int64 = 0
+        let fm = FileManager.default
+
+        // Database file size
+        if let attrs = try? fm.attributesOfItem(atPath: databasePath),
+           let size = attrs[.size] as? Int64 {
+            total += size
+        }
+
+        // Image files size
+        if let enumerator = fm.enumerator(at: imagesDirectory, includingPropertiesForKeys: [.fileSizeKey]) {
+            for case let fileURL as URL in enumerator {
+                if let size = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                    total += Int64(size)
+                }
+            }
+        }
+
+        return total
     }
 
     // MARK: - Private

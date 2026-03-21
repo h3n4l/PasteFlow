@@ -12,8 +12,9 @@ struct SettingsView: View {
         TabView {
             generalTab.tabItem { Label("General", systemImage: "gear") }
             storageTab.tabItem { Label("Storage", systemImage: "internaldrive") }
+            healthCheckTab.tabItem { Label("Health", systemImage: "stethoscope") }
             aboutTab.tabItem { Label("About", systemImage: "info.circle") }
-        }.frame(width: 400, height: 250)
+        }.frame(width: 400, height: 280)
     }
 
     private var generalTab: some View {
@@ -48,6 +49,41 @@ struct SettingsView: View {
                 } message: {
                     Text("This will permanently delete all clipboard history. This cannot be undone.")
                 }
+        }.padding()
+    }
+
+    private var healthCheckTab: some View {
+        Form {
+            LabeledContent("Data size") {
+                Text(ByteCountFormatter.string(
+                    fromByteCount: appState.storage.dataSize(),
+                    countStyle: .file
+                ))
+                .foregroundColor(.secondary)
+            }
+
+            LabeledContent("Accessibility") {
+                if PasteSimulator.isAccessibilityGranted {
+                    HStack(spacing: 4) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.green)
+                        Text("Granted")
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    HStack(spacing: 8) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.red)
+                            Text("Not granted")
+                                .foregroundColor(.secondary)
+                        }
+                        Button("Open Settings") {
+                            PasteSimulator.requestAccessibility()
+                        }
+                    }
+                }
+            }
         }.padding()
     }
 
