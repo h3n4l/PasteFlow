@@ -49,6 +49,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
 
+            panel.onTab = { [weak state] in state?.cycleFilter() }
+
             state.hotkeyService.onHotkeyPressed = { [weak self] in self?.togglePanel() }
             state.hotkeyService.register()
             state.clipboardMonitor.start()

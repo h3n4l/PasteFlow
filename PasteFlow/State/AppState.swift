@@ -95,6 +95,14 @@ final class AppState: ObservableObject {
         reloadItems()
     }
 
+    private let filterOrder: [ContentType?] = [nil, .text, .link, .code, .image]
+
+    func cycleFilter() {
+        let currentIndex = filterOrder.firstIndex(where: { $0 == activeFilter }) ?? 0
+        let nextIndex = (currentIndex + 1) % filterOrder.count
+        setFilter(filterOrder[nextIndex])
+    }
+
     func deleteItem(_ item: ClipboardItem) {
         do {
             try storage.delete(item.id)

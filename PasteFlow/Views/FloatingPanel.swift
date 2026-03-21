@@ -7,6 +7,7 @@ final class FloatingPanel: NSPanel {
     var onEnter: (() -> Void)?
     var onEsc: (() -> Void)?
     var onCmdNumber: ((Int) -> Void)?
+    var onTab: (() -> Void)?
 
     private var localMonitor: Any?
 
@@ -101,6 +102,9 @@ final class FloatingPanel: NSPanel {
             return true
         case 36: // Return/Enter
             onEnter?()
+            return true
+        case 48: // Tab
+            onTab?()
             return true
         case 53: // Esc
             onEsc?()
