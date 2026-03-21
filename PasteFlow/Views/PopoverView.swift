@@ -2,11 +2,12 @@ import SwiftUI
 
 struct PopoverView: View {
     @ObservedObject var appState: AppState
+    @FocusState private var isSearchFocused: Bool
     var onDismiss: () -> Void
 
     var body: some View {
         VStack(spacing: 0) {
-            SearchBarView(searchText: $appState.searchText)
+            SearchBarView(searchText: $appState.searchText, isSearchFocused: $isSearchFocused)
             FilterRowView(activeFilter: Binding(
                 get: { appState.activeFilter },
                 set: { appState.setFilter($0) }
@@ -44,6 +45,14 @@ struct PopoverView: View {
             )
         )
         .onExitCommand { onDismiss() }
+        .onChange(of: appState.isPanelVisible) { visible in
+            if visible {
+                // Small delay to let the panel finish appearing
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    isSearchFocused = true
+                }
+            }
+        }
     }
 
     private func pasteAndDismiss(_ item: ClipboardItem) {

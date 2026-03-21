@@ -9,6 +9,7 @@ final class AppState: ObservableObject {
     @Published var activeFilter: ContentType?
     @Published var totalItemCount: Int = 0
     @Published var statusMessage: String?
+    @Published var isPanelVisible: Bool = false
     #if DEBUG
     @Published var isAccessibilityGranted: Bool = true
     #else

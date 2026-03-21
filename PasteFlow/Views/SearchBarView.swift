@@ -2,6 +2,8 @@ import SwiftUI
 
 struct SearchBarView: View {
     @Binding var searchText: String
+    var isSearchFocused: FocusState<Bool>.Binding
+
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
@@ -10,6 +12,7 @@ struct SearchBarView: View {
             TextField("Search clipboard...", text: $searchText)
                 .textFieldStyle(.plain)
                 .font(.system(size: 13))
+                .focused(isSearchFocused)
             Spacer()
             Text("Cmd+Shift+V")
                 .font(.system(size: 11))

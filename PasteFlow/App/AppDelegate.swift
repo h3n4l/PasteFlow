@@ -47,7 +47,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func togglePanel() {
         panel?.toggle()
-        if panel?.isVisible == true {
+        let visible = panel?.isVisible == true
+        appState.isPanelVisible = visible
+        if visible {
             appState.reloadItems()
             appState.isAccessibilityGranted = PasteSimulator.isAccessibilityGranted
         }
