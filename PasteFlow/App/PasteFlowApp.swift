@@ -29,7 +29,7 @@ struct MenuBarMenuView14: View {
             .keyboardShortcut("v", modifiers: [.command, .shift])
         Divider()
         Button("Settings...") {
-                NSApp.activate(ignoringOtherApps: true)
+                appDelegate.showSettings()
                 DispatchQueue.main.async {
                     openSettings()
                 }
@@ -49,7 +49,7 @@ struct MenuBarMenuView13: View {
             .keyboardShortcut("v", modifiers: [.command, .shift])
         Divider()
         Button("Settings...") {
-            NSApp.activate(ignoringOtherApps: true)
+            appDelegate.showSettings()
             DispatchQueue.main.async {
                 NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
             }

@@ -78,6 +78,39 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    /// Show dock icon, activate app, and watch for settings window close.
+    func showSettings() {
+        // Switch to regular app (shows dock icon)
+        NSApp.setActivationPolicy(.regular)
+        NSApp.activate(ignoringOtherApps: true)
+
+        // Watch for the settings window to close
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(windowWillClose(_:)),
+            name: NSWindow.willCloseNotification,
+            object: nil
+        )
+    }
+
+    @objc private func windowWillClose(_ notification: Notification) {
+        // Check if any visible windows remain (besides the floating panel)
+        DispatchQueue.main.async { [weak self] in
+            let hasVisibleWindows = NSApp.windows.contains { window in
+                window.isVisible && !(window is FloatingPanel) && window.className != "NSStatusBarWindow"
+            }
+            if !hasVisibleWindows {
+                // No more windows — hide dock icon
+                NSApp.setActivationPolicy(.accessory)
+                NotificationCenter.default.removeObserver(
+                    self as Any,
+                    name: NSWindow.willCloseNotification,
+                    object: nil
+                )
+            }
+        }
+    }
+
     private func createStorage() throws -> StorageService {
         do { return try StorageService() }
         catch {
