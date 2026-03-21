@@ -95,14 +95,20 @@ class KeyCaptureView: NSView {
             }
         }
         switch event.keyCode {
-        case 126: onArrowUp?()
-        case 125: onArrowDown?()
-        case 36: onEnter?()
+        case 126: onArrowUp?()   // Up arrow
+        case 125: onArrowDown?() // Down arrow
+        case 36: onEnter?()     // Return
+        case 48: break          // Tab — ignore, don't forward
+        case 53: break          // Esc — handled by onExitCommand
         default:
             if let chars = event.characters, !chars.isEmpty,
                !event.modifierFlags.contains(.command),
                !event.modifierFlags.contains(.control) {
-                onTextInput?(chars)
+                // Only forward printable characters
+                let isControl = chars.unicodeScalars.allSatisfy { CharacterSet.controlCharacters.contains($0) }
+                if !isControl {
+                    onTextInput?(chars)
+                }
             } else {
                 super.keyDown(with: event)
             }

@@ -23,6 +23,8 @@ final class FloatingPanel: NSPanel {
         self.contentView?.wantsLayer = true
         self.contentView?.layer?.cornerRadius = 12
         self.contentView?.layer?.masksToBounds = true
+        // Force light appearance — the UI is designed with light colors
+        self.appearance = NSAppearance(named: .aqua)
     }
 
     func centerOnScreen() {
