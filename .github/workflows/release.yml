@@ -1,0 +1,93 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: macos-15
+    # Only run on release/* branches
+    if: startsWith(github.ref_name, 'release/')
+    steps:
+      - name: Extract version from branch name
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME#release/}"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Error: Branch name must be release/x.x.x (got: $GITHUB_REF_NAME)"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version: $VERSION"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+      - name: Install create-dmg
+        run: brew install create-dmg
+
+      - name: Set version in Xcode project
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          # Update MARKETING_VERSION in all build configurations
+          sed -i '' "s/MARKETING_VERSION = .*;/MARKETING_VERSION = $VERSION;/g" \
+            PasteFlow.xcodeproj/project.pbxproj
+
+      - name: Build Release
+        run: |
+          xcodebuild -project PasteFlow.xcodeproj \
+            -scheme PasteFlow \
+            -configuration Release \
+            -derivedDataPath build/DerivedData \
+            build
+
+      - name: Create DMG
+        run: |
+          APP_PATH="build/DerivedData/Build/Products/Release/PasteFlow.app"
+          DMG_DIR="build/dmg"
+          VERSION="${{ steps.version.outputs.version }}"
+          DMG_PATH="build/PasteFlow-${VERSION}.dmg"
+
+          mkdir -p "$DMG_DIR"
+          cp -R "$APP_PATH" "$DMG_DIR/"
+
+          CREATE_DMG_ARGS=(
+            --volname "PasteFlow"
+            --volicon "assets/VolumeIcon.icns"
+            --window-pos 200 120
+            --window-size 660 448
+            --icon-size 128
+            --text-size 12
+            --icon "PasteFlow.app" 190 172
+            --hide-extension "PasteFlow.app"
+            --app-drop-link 470 172
+          )
+
+          if [ -f "assets/dmg-background@2x.png" ]; then
+            CREATE_DMG_ARGS+=(--background "assets/dmg-background@2x.png")
+          fi
+
+          create-dmg "${CREATE_DMG_ARGS[@]}" "$DMG_PATH" "$DMG_DIR/"
+          echo "DMG_PATH=$DMG_PATH" >> "$GITHUB_ENV"
+          echo "DMG created: $(du -h "$DMG_PATH" | cut -f1)"
+
+      - name: Create git tag
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release create "v${VERSION}" \
+            --title "PasteFlow v${VERSION}" \
+            --draft \
+            --generate-notes \
+            "$DMG_PATH"
