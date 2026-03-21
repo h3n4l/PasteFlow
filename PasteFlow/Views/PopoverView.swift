@@ -22,7 +22,7 @@ struct PopoverView: View {
             FooterView(
                 itemCount: appState.totalItemCount,
                 statusMessage: appState.statusMessage,
-                isAccessibilityGranted: PasteSimulator.isAccessibilityGranted
+                isAccessibilityGranted: appState.isAccessibilityGranted
             )
         }
         .frame(width: 560, height: 456)

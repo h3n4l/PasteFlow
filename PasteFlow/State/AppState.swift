@@ -9,6 +9,7 @@ final class AppState: ObservableObject {
     @Published var activeFilter: ContentType?
     @Published var totalItemCount: Int = 0
     @Published var statusMessage: String?
+    @Published var isAccessibilityGranted: Bool = PasteSimulator.isAccessibilityGranted
 
     let storage: StorageService
     let clipboardMonitor: ClipboardMonitor
