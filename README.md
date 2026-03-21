@@ -8,18 +8,6 @@
 
 ![PasteFlow](assets/screenshots/hero.png)
 
-## Features
-
-- **Instant access** — press `Cmd+Shift+V` to open your clipboard history from anywhere
-- **Smart categorization** — text, code, links, and images are auto-detected and tagged
-- **Search & filter** — find any copied item instantly with search or filter by type (Tab to cycle filters)
-- **Quick paste** — select an item and press Enter to paste directly into your app
-- **Keyboard-first** — arrow keys to navigate, `Cmd+1`–`9` to quick-paste, Esc to dismiss
-- **Image support** — screenshots and copied images stored in original format (PNG, TIFF, JPEG, etc.)
-- **Lightweight** — lives in your menu bar, no Dock icon, stays out of your way
-- **Privacy-first** — all data stored locally, nothing leaves your Mac
-- **Configurable retention** — keep history for 7 to 90 days
-
 ## Install
 
 ### Download
@@ -27,12 +15,6 @@
 Download the latest `.dmg` from [Releases](https://github.com/h3n4l/PasteFlow/releases), open it, and drag PasteFlow to Applications.
 
 ![Install](assets/screenshots/dmg.png)
-
-### First Launch
-
-1. Open PasteFlow from Applications
-2. Grant **Accessibility** permission when prompted (required for auto-paste)
-3. PasteFlow appears in your menu bar — press `Cmd+Shift+V` to get started
 
 ### Bypass Gatekeeper
 
@@ -42,6 +24,24 @@ Download the latest `.dmg` from [Releases](https://github.com/h3n4l/PasteFlow/re
 > sudo xattr -rd com.apple.quarantine /Applications/PasteFlow.app
 > ```
 > Press Enter and type your Mac password when prompted. You only need to do this once.
+
+### First Launch
+
+1. Open PasteFlow from Applications
+2. Grant **Accessibility** permission when prompted (required for auto-paste)
+3. PasteFlow appears in your menu bar — press `Cmd+Shift+V` to get started
+
+## Features
+
+- **Instant access** — press `Cmd+Shift+V` to open your clipboard history from anywhere
+- **Smart categorization** — text, code, links, and images are auto-detected and tagged
+- **Search & filter** — find any copied item instantly with search or filter by type
+- **Quick paste** — select an item and press Enter to paste directly into your app
+- **Keyboard-first** — arrow keys to navigate, `Cmd+1`–`9` to quick-paste, Tab to cycle filters, Esc to dismiss
+- **Image support** — screenshots and copied images stored in original format (PNG, TIFF, JPEG, etc.)
+- **Lightweight** — lives in your menu bar, no Dock icon, stays out of your way
+- **Privacy-first** — all data stored locally, nothing leaves your Mac
+- **Configurable retention** — keep history for 7 to 90 days
 
 ## Usage
 
