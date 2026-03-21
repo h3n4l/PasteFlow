@@ -41,11 +41,48 @@ final class ClipboardMonitor {
 
         let sourceApp = NSWorkspace.shared.frontmostApplication?.localizedName
 
-        if let item = readImage(from: pasteboard, sourceApp: sourceApp) {
+        if let item = readFiles(from: pasteboard, sourceApp: sourceApp) {
+            saveAndNotify(item)
+        } else if let item = readImage(from: pasteboard, sourceApp: sourceApp) {
             saveAndNotify(item)
         } else if let item = readText(from: pasteboard, sourceApp: sourceApp) {
             saveAndNotify(item)
         }
+    }
+
+    private func readFiles(from pasteboard: NSPasteboard, sourceApp: String?) -> ClipboardItem? {
+        guard let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL] else {
+            return nil
+        }
+        let fileURLs = urls.filter { $0.isFileURL }
+        guard !fileURLs.isEmpty else { return nil }
+
+        let refs = fileURLs.map { url -> FileReference in
+            let name = url.lastPathComponent
+            let size: Int64
+            let utiType: String
+            let utiDescription: String
+
+            if let attrs = try? FileManager.default.attributesOfItem(atPath: url.path),
+               let fileSize = attrs[.size] as? Int64 {
+                size = fileSize
+            } else {
+                size = 0
+            }
+
+            if let resourceValues = try? url.resourceValues(forKeys: [.typeIdentifierKey, .localizedTypeDescriptionKey]) {
+                utiType = resourceValues.typeIdentifier ?? "public.item"
+                utiDescription = resourceValues.localizedTypeDescription ?? "File"
+            } else {
+                utiType = "public.item"
+                utiDescription = "File"
+            }
+
+            return FileReference(path: url.path, name: name, size: size,
+                                  utiType: utiType, utiDescription: utiDescription)
+        }
+
+        return ClipboardItem(content: .file(refs), sourceApp: sourceApp, contentType: .file)
     }
 
     private func readText(from pasteboard: NSPasteboard, sourceApp: String?) -> ClipboardItem? {
