@@ -21,6 +21,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let panel = FloatingPanel(contentView: hostingView)
             self.panel = panel
 
+            // Wire up keyboard shortcuts on the panel
+            panel.onArrowUp = { [weak state] in state?.selectPrevious() }
+            panel.onArrowDown = { [weak state] in state?.selectNext() }
+            panel.onEnter = { [weak self, weak state] in
+                if let item = state?.selectedItem {
+                    self?.panel?.hidePanel()
+                    state?.isPanelVisible = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        state?.pasteItem(item)
+                    }
+                }
+            }
+            panel.onEsc = { [weak self] in
+                self?.panel?.hidePanel()
+                self?.appState.isPanelVisible = false
+            }
+            panel.onCmdNumber = { [weak self, weak state] num in
+                let index = num - 1
+                if let items = state?.filteredItems,
+                   index >= 0, index < items.count {
+                    self?.panel?.hidePanel()
+                    state?.isPanelVisible = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                        state?.pasteItem(items[index])
+                    }
+                }
+            }
+
             state.hotkeyService.onHotkeyPressed = { [weak self] in self?.togglePanel() }
             state.hotkeyService.register()
             state.clipboardMonitor.start()

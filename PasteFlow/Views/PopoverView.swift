@@ -30,24 +30,8 @@ struct PopoverView: View {
         .background(Color.white)
         .cornerRadius(12)
         .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: 0xE5E5E5), lineWidth: 1))
-        .background(
-            KeyEventHandler(
-                onArrowUp: { appState.selectPrevious() },
-                onArrowDown: { appState.selectNext() },
-                onEnter: { if let item = appState.selectedItem { pasteAndDismiss(item) } },
-                onNumber: { num in
-                    let index = num - 1
-                    if index >= 0, index < appState.filteredItems.count {
-                        pasteAndDismiss(appState.filteredItems[index])
-                    }
-                },
-                onTextInput: { chars in appState.searchText.append(chars) }
-            )
-        )
-        .onExitCommand { onDismiss() }
         .onChange(of: appState.isPanelVisible) { visible in
             if visible {
-                // Small delay to let the panel finish appearing
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     isSearchFocused = true
                 }
@@ -58,69 +42,5 @@ struct PopoverView: View {
     private func pasteAndDismiss(_ item: ClipboardItem) {
         onDismiss()
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { appState.pasteItem(item) }
-    }
-}
-
-struct KeyEventHandler: NSViewRepresentable {
-    let onArrowUp: () -> Void
-    let onArrowDown: () -> Void
-    let onEnter: () -> Void
-    let onNumber: (Int) -> Void
-    let onTextInput: (String) -> Void
-
-    func makeNSView(context: Context) -> KeyCaptureView {
-        let view = KeyCaptureView()
-        view.onArrowUp = onArrowUp
-        view.onArrowDown = onArrowDown
-        view.onEnter = onEnter
-        view.onNumber = onNumber
-        view.onTextInput = onTextInput
-        return view
-    }
-
-    func updateNSView(_ nsView: KeyCaptureView, context: Context) {
-        nsView.onArrowUp = onArrowUp
-        nsView.onArrowDown = onArrowDown
-        nsView.onEnter = onEnter
-        nsView.onNumber = onNumber
-        nsView.onTextInput = onTextInput
-    }
-}
-
-class KeyCaptureView: NSView {
-    var onArrowUp: (() -> Void)?
-    var onArrowDown: (() -> Void)?
-    var onEnter: (() -> Void)?
-    var onNumber: ((Int) -> Void)?
-    var onTextInput: ((String) -> Void)?
-
-    override var acceptsFirstResponder: Bool { true }
-
-    override func keyDown(with event: NSEvent) {
-        if event.modifierFlags.contains(.command) {
-            if let chars = event.charactersIgnoringModifiers, let num = Int(chars), num >= 1, num <= 9 {
-                onNumber?(num)
-                return
-            }
-        }
-        switch event.keyCode {
-        case 126: onArrowUp?()   // Up arrow
-        case 125: onArrowDown?() // Down arrow
-        case 36: onEnter?()     // Return
-        case 48: break          // Tab — ignore, don't forward
-        case 53: break          // Esc — handled by onExitCommand
-        default:
-            if let chars = event.characters, !chars.isEmpty,
-               !event.modifierFlags.contains(.command),
-               !event.modifierFlags.contains(.control) {
-                // Only forward printable characters
-                let isControl = chars.unicodeScalars.allSatisfy { CharacterSet.controlCharacters.contains($0) }
-                if !isControl {
-                    onTextInput?(chars)
-                }
-            } else {
-                super.keyDown(with: event)
-            }
-        }
     }
 }
