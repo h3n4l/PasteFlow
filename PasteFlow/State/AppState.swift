@@ -12,6 +12,10 @@ final class AppState: ObservableObject {
     @Published var isPanelVisible: Bool = false
     @Published var isAccessibilityGranted: Bool = PasteSimulator.isAccessibilityGranted
 
+    #if ENABLE_AUTO_UPDATE
+    @Published var updateService: UpdateService?
+    #endif
+
     let storage: StorageService
     let clipboardMonitor: ClipboardMonitor
     let hotkeyService: HotkeyService
