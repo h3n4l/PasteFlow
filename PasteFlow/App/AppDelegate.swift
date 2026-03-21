@@ -3,13 +3,15 @@ import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: FloatingPanel?
-    var appState: AppState?
+    // Initialized eagerly so it's available when SwiftUI evaluates the Settings scene
+    lazy var appState: AppState = {
+        let storage = try! createStorage()
+        return AppState(storage: storage)
+    }()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
-            let storage = try createStorage()
-            let state = AppState(storage: storage)
-            self.appState = state
+            let state = appState
 
             let popoverView = PopoverView(appState: state) { [weak self] in
                 self?.panel?.hidePanel()
@@ -39,14 +41,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func togglePanel() {
         panel?.toggle()
         if panel?.isVisible == true {
-            appState?.reloadItems()
-            appState?.objectWillChange.send()
+            appState.reloadItems()
+            appState.objectWillChange.send()
         }
-    }
-
-    func openSettings() {
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
     }
 
     private func createStorage() throws -> StorageService {

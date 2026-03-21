@@ -6,20 +6,52 @@ struct PasteFlowApp: App {
 
     var body: some Scene {
         MenuBarExtra("PasteFlow", image: "MenuBarIcon") {
-            Button("Open PasteFlow") { appDelegate.togglePanel() }
-                .keyboardShortcut("v", modifiers: [.command, .shift])
-            Divider()
-            Button("Settings...") { appDelegate.openSettings() }
-                .keyboardShortcut(",", modifiers: .command)
-            Button("Quit PasteFlow") { NSApplication.shared.terminate(nil) }
-                .keyboardShortcut("q", modifiers: .command)
-        }
-        Settings {
-            if let appState = appDelegate.appState {
-                SettingsView().environmentObject(appState)
+            if #available(macOS 14.0, *) {
+                MenuBarMenuView14(appDelegate: appDelegate)
             } else {
-                Text("Loading...").frame(width: 400, height: 250)
+                MenuBarMenuView13(appDelegate: appDelegate)
             }
         }
+        Settings {
+            SettingsView().environmentObject(appDelegate.appState)
+        }
+    }
+}
+
+// macOS 14+: use @Environment(\.openSettings)
+@available(macOS 14.0, *)
+struct MenuBarMenuView14: View {
+    let appDelegate: AppDelegate
+    @Environment(\.openSettings) private var openSettings
+
+    var body: some View {
+        Button("Open PasteFlow") { appDelegate.togglePanel() }
+            .keyboardShortcut("v", modifiers: [.command, .shift])
+        Divider()
+        Button("Settings...") {
+                NSApp.activate(ignoringOtherApps: true)
+                openSettings()
+            }
+            .keyboardShortcut(",", modifiers: .command)
+        Button("Quit PasteFlow") { NSApplication.shared.terminate(nil) }
+            .keyboardShortcut("q", modifiers: .command)
+    }
+}
+
+// macOS 13: fallback using sendAction
+struct MenuBarMenuView13: View {
+    let appDelegate: AppDelegate
+
+    var body: some View {
+        Button("Open PasteFlow") { appDelegate.togglePanel() }
+            .keyboardShortcut("v", modifiers: [.command, .shift])
+        Divider()
+        Button("Settings...") {
+            NSApp.activate(ignoringOtherApps: true)
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        }
+        .keyboardShortcut(",", modifiers: .command)
+        Button("Quit PasteFlow") { NSApplication.shared.terminate(nil) }
+            .keyboardShortcut("q", modifiers: .command)
     }
 }

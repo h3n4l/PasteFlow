@@ -109,14 +109,3 @@ class KeyCaptureView: NSView {
         }
     }
 }
-// MARK: - SwiftUI Preview
-#Preview {
-    let storage = try! StorageService()
-    let appState = AppState(storage: storage)
-    
-    return PopoverView(appState: appState) {
-        print("Dismissed")
-    }
-}
-
-
