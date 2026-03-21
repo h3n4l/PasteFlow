@@ -4,6 +4,7 @@ struct DetailPanelView: View {
     let item: ClipboardItem?
     let onPaste: (ClipboardItem) -> Void
     let onDelete: (ClipboardItem) -> Void
+    let onCopyPath: ((ClipboardItem) -> Void)?
 
     var body: some View {
         if let item = item {
@@ -57,9 +58,19 @@ struct DetailPanelView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(refs, id: \.path) { ref in
-                        Text(ref.name)
-                            .font(.system(size: 11))
-                            .foregroundColor(Color(hex: 0x666666))
+                        HStack(spacing: 6) {
+                            Image(systemName: "doc")
+                                .font(.system(size: 11))
+                                .foregroundColor(Color(hex: 0x999999))
+                            VStack(alignment: .leading, spacing: 1) {
+                                Text(ref.name)
+                                    .font(.system(size: 11))
+                                    .foregroundColor(Color(hex: 0x666666))
+                                Text("\(ref.utiDescription) \u{00B7} \(ByteCountFormatter.string(fromByteCount: ref.size, countStyle: .file))")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(Color(hex: 0x999999))
+                            }
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -112,6 +123,14 @@ struct DetailPanelView: View {
                     .padding(.horizontal, 10).padding(.vertical, 4).cornerRadius(6)
                     .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(hex: 0xE5E5E5), lineWidth: 1))
             }.buttonStyle(.plain)
+            if case .file = item.content {
+                Button(action: { onCopyPath?(item) }) {
+                    Text("Copy Path").font(.system(size: 11)).foregroundColor(Color(hex: 0x3C3489))
+                        .padding(.horizontal, 10).padding(.vertical, 4)
+                        .background(Color(hex: 0xEEEDFE)).cornerRadius(6)
+                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(hex: 0xE5E5E5), lineWidth: 1))
+                }.buttonStyle(.plain)
+            }
         }
     }
 }

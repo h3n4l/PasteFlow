@@ -17,7 +17,8 @@ struct PopoverView: View {
                 DetailPanelView(
                     item: appState.selectedItem,
                     onPaste: { item in pasteAndDismiss(item) },
-                    onDelete: { item in appState.deleteItem(item) }
+                    onDelete: { item in appState.deleteItem(item) },
+                    onCopyPath: { item in appState.copyPathItem(item) }
                 ).frame(width: 220)
             }.frame(maxHeight: .infinity)
             FooterView(

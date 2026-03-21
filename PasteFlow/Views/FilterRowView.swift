@@ -3,7 +3,7 @@ import SwiftUI
 struct FilterRowView: View {
     @Binding var activeFilter: ContentType?
     private let filters: [(label: String, type: ContentType?)] = [
-        ("All", nil), ("Text", .text), ("Link", .link), ("Code", .code), ("Image", .image),
+        ("All", nil), ("Text", .text), ("Link", .link), ("Code", .code), ("Image", .image), ("File", .file),
     ]
     var body: some View {
         HStack(spacing: 6) {
