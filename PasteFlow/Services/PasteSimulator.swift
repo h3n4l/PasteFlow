@@ -32,6 +32,9 @@ enum PasteSimulator {
             pasteboard.setString(text, forType: .string)
         case .image(let data, let format):
             pasteboard.setData(data, forType: pasteboardType(for: format))
+        case .file(let refs):
+            let urls = refs.map { URL(fileURLWithPath: $0.path) as NSURL }
+            pasteboard.writeObjects(urls)
         }
     }
 

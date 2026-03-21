@@ -53,6 +53,21 @@ struct DetailPanelView: View {
                     .frame(maxHeight: 120)
                     .cornerRadius(8)
             }
+        case .file(let refs):
+            ScrollView {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(refs, id: \.path) { ref in
+                        Text(ref.name)
+                            .font(.system(size: 11))
+                            .foregroundColor(Color(hex: 0x666666))
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(8)
+            }
+            .frame(maxHeight: 120)
+            .background(Color(hex: 0xF5F5F3))
+            .cornerRadius(8)
         }
     }
 
@@ -65,6 +80,15 @@ struct DetailPanelView: View {
             case .image(let data, let format):
                 Text("\(format.rawValue.uppercased()) \u{00B7} \(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file))")
                     .font(.system(size: 11)).foregroundColor(Color(hex: 0x999999))
+            case .file(let refs):
+                if refs.count == 1 {
+                    Text("\(refs[0].utiDescription) \u{00B7} \(ByteCountFormatter.string(fromByteCount: refs[0].size, countStyle: .file))")
+                        .font(.system(size: 11)).foregroundColor(Color(hex: 0x999999))
+                } else {
+                    let totalSize = refs.reduce(Int64(0)) { $0 + $1.size }
+                    Text("\(refs.count) files \u{00B7} \(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)) total")
+                        .font(.system(size: 11)).foregroundColor(Color(hex: 0x999999))
+                }
             }
             Text("Copied \(item.createdAt.relativeString())")
                 .font(.system(size: 11)).foregroundColor(Color(hex: 0x999999))
