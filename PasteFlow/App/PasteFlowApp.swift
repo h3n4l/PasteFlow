@@ -30,7 +30,9 @@ struct MenuBarMenuView14: View {
         Divider()
         Button("Settings...") {
                 NSApp.activate(ignoringOtherApps: true)
-                openSettings()
+                DispatchQueue.main.async {
+                    openSettings()
+                }
             }
             .keyboardShortcut(",", modifiers: .command)
         Button("Quit PasteFlow") { NSApplication.shared.terminate(nil) }
@@ -48,7 +50,9 @@ struct MenuBarMenuView13: View {
         Divider()
         Button("Settings...") {
             NSApp.activate(ignoringOtherApps: true)
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            DispatchQueue.main.async {
+                NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+            }
         }
         .keyboardShortcut(",", modifiers: .command)
         Button("Quit PasteFlow") { NSApplication.shared.terminate(nil) }
