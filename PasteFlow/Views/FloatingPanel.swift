@@ -42,6 +42,8 @@ final class FloatingPanel: NSPanel {
         let y = screenFrame.midY - frame.height / 2
         setFrameOrigin(NSPoint(x: x, y: y))
     }
+    
+    
 
     func showPanel() {
         centerOnScreen()
