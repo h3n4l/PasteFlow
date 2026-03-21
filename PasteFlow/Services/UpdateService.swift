@@ -60,24 +60,28 @@ final class UpdateService: ObservableObject {
 
         updater.check(
             success: { [weak self] in
-                guard let self else { return }
-                self.isChecking = false
-                if !self.updateAvailable && !silent {
-                    self.isUpToDate = true
-                }
-                if self.updateAvailable {
-                    self.logger.info("Update available: \(self.newVersion ?? "unknown")")
-                } else {
-                    self.logger.info("Already up to date")
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    self.isChecking = false
+                    if !self.updateAvailable && !silent {
+                        self.isUpToDate = true
+                    }
+                    if self.updateAvailable {
+                        self.logger.info("Update available: \(self.newVersion ?? "unknown")")
+                    } else {
+                        self.logger.info("Already up to date")
+                    }
                 }
             },
             fail: { [weak self] err in
-                guard let self else { return }
-                self.isChecking = false
-                if !silent {
-                    self.error = "Couldn't check for updates. Please check your connection."
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    self.isChecking = false
+                    if !silent {
+                        self.error = "Couldn't check for updates. Please check your connection."
+                    }
+                    self.logger.error("Update check failed: \(err.localizedDescription)")
                 }
-                self.logger.error("Update check failed: \(err.localizedDescription)")
             }
         )
     }

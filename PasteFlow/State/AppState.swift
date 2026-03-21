@@ -13,7 +13,16 @@ final class AppState: ObservableObject {
     @Published var isAccessibilityGranted: Bool = PasteSimulator.isAccessibilityGranted
 
     #if ENABLE_AUTO_UPDATE
-    @Published var updateService: UpdateService?
+    @Published var updateService: UpdateService? {
+        didSet {
+            updateCancellable = updateService?.objectWillChange
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in
+                    self?.objectWillChange.send()
+                }
+        }
+    }
+    private var updateCancellable: AnyCancellable?
     #endif
 
     let storage: StorageService
