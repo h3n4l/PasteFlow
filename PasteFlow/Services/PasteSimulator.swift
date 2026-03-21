@@ -24,6 +24,15 @@ enum PasteSimulator {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { simulateCmdV() }
     }
 
+    static func copyPath(_ item: ClipboardItem, clipboardMonitor: ClipboardMonitor? = nil) {
+        guard case .file(let refs) = item.content else { return }
+        clipboardMonitor?.suppressNextChange = true
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        let paths = refs.map(\.path).joined(separator: "\n")
+        pasteboard.setString(paths, forType: .string)
+    }
+
     private static func copyToPasteboard(_ item: ClipboardItem) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
