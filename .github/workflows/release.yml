@@ -88,6 +88,16 @@ jobs:
           echo "DMG_PATH=$DMG_PATH" >> "$GITHUB_ENV"
           echo "DMG created: $(du -h "$DMG_PATH" | cut -f1)"
 
+      - name: Create ZIP for auto-update
+        run: |
+          APP_PATH="build/DerivedData/Build/Products/Release/PasteFlow.app"
+          VERSION="${{ steps.version.outputs.version }}"
+          ZIP_PATH="build/PasteFlow-${VERSION}.zip"
+          cd "$(dirname "$APP_PATH")"
+          zip -r -y "${GITHUB_WORKSPACE}/${ZIP_PATH}" "PasteFlow.app"
+          echo "ZIP_PATH=${ZIP_PATH}" >> "$GITHUB_ENV"
+          echo "ZIP created: $(du -h "${GITHUB_WORKSPACE}/${ZIP_PATH}" | cut -f1)"
+
       - name: Create git tag
         run: |
           VERSION="${{ steps.version.outputs.version }}"
@@ -103,4 +113,5 @@ jobs:
             --title "PasteFlow v${VERSION}" \
             --draft \
             --generate-notes \
-            "$DMG_PATH"
+            "$DMG_PATH" \
+            "$ZIP_PATH"
