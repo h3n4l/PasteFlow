@@ -70,7 +70,7 @@ A new service at `PasteFlow/Services/UpdateService.swift`:
 |----------|------|-------------|
 | `updateAvailable` | `Bool` | Whether a newer version was found |
 | `newVersion` | `String?` | The version string of the available update |
-| `isDownloading` | `Bool` | Whether an update is being downloaded/installed (may need adaptation based on AppUpdater's actual API surface) |
+| `isDownloading` | `Bool` | Whether an update is being downloaded/installed. During implementation, inspect AppUpdater's published properties and map accordingly; if no download-progress signal exists, show an indeterminate spinner. |
 | `error` | `String?` | Error message to display to user |
 
 ### Methods
@@ -112,6 +112,7 @@ Add update UI to the existing **About** tab in Settings (which already shows ver
 When an update is available:
 - Add an "Update Available" menu item to the menu bar menu, conditionally shown based on `appState.updateAvailable`
 - Both `MenuBarMenuView14` and `MenuBarMenuView13` need updating (they access state via `appDelegate.appState`)
+- Place the menu item between the Divider and "Settings..." (high visibility, before quit)
 - Clicking it opens the update prompt
 
 ### Update Prompt
