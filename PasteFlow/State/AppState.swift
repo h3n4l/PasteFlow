@@ -108,7 +108,7 @@ final class AppState: ObservableObject {
         reloadItems()
     }
 
-    private let filterOrder: [ContentType?] = [nil, .text, .link, .code, .image]
+    private let filterOrder: [ContentType?] = [nil, .text, .link, .code, .image, .file]
 
     func cycleFilter() {
         let currentIndex = filterOrder.firstIndex(where: { $0 == activeFilter }) ?? 0
@@ -128,6 +128,10 @@ final class AppState: ObservableObject {
 
     func pasteItem(_ item: ClipboardItem) {
         PasteSimulator.paste(item, clipboardMonitor: clipboardMonitor)
+    }
+
+    func copyPathItem(_ item: ClipboardItem) {
+        PasteSimulator.copyPath(item, clipboardMonitor: clipboardMonitor)
     }
 
     func selectNext() {
