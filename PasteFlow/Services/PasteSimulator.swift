@@ -16,12 +16,10 @@ enum PasteSimulator {
         clipboardMonitor?.suppressNextChange = true
         copyToPasteboard(item)
 
-        #if !DEBUG
         guard isAccessibilityGranted else {
             logger.info("Accessibility not granted — copied to clipboard only (manual paste mode)")
             return
         }
-        #endif
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { simulateCmdV() }
     }

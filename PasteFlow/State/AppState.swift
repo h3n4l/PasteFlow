@@ -10,11 +10,7 @@ final class AppState: ObservableObject {
     @Published var totalItemCount: Int = 0
     @Published var statusMessage: String?
     @Published var isPanelVisible: Bool = false
-    #if DEBUG
-    @Published var isAccessibilityGranted: Bool = true
-    #else
     @Published var isAccessibilityGranted: Bool = PasteSimulator.isAccessibilityGranted
-    #endif
 
     let storage: StorageService
     let clipboardMonitor: ClipboardMonitor

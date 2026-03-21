@@ -54,14 +54,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             state.clipboardMonitor.start()
             state.setupMonitorCallback()
 
-            // Check accessibility — skip in DEBUG since Xcode's debug process
-            // has a different identity and AXIsProcessTrusted() returns false
-            // even when the app is granted in System Settings.
-            #if !DEBUG
             if !PasteSimulator.isAccessibilityGranted {
                 showAccessibilityDialog()
             }
-            #endif
         } catch {
             let alert = NSAlert()
             alert.messageText = "PasteFlow Failed to Start"
