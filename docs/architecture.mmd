@@ -1,0 +1,125 @@
+%% PasteFlow System Architecture — All Flows
+%% Render at: https://mermaid.live  (paste this entire file)
+
+flowchart TD
+
+    %% ===== INITIALIZATION =====
+    subgraph INIT ["① INITIALIZATION  (app launch)"]
+        direction TB
+        MAIN["<b>@main PasteFlowApp</b><br/>PasteFlowApp.swift"]
+        MAIN -->|"@NSApplicationDelegateAdaptor"| AD["<b>AppDelegate</b><br/>AppDelegate.swift"]
+        MAIN -->|"body: some Scene"| MBE["<b>MenuBarExtra</b><br/>tray icon + dropdown menu<br/>(Open / Settings / Quit)"]
+        MAIN -->|"body: some Scene"| SETTINGS["<b>Settings Scene</b><br/>SettingsView"]
+
+        AD -->|"applicationDidFinishLaunching()"| BOOT
+
+        subgraph BOOT ["Boot sequence (in order)"]
+            direction TB
+            B1["1&#41; <b>StorageService()</b><br/>open ~/Library/.../clipboard.db<br/>create tables if needed"]
+            B2["2&#41; <b>AppState(storage:)</b><br/>central ObservableObject<br/>creates HotkeyService + ClipboardMonitor<br/>calls reloadItems(), cleanupExpired()"]
+            B3["3&#41; <b>PopoverView</b> → NSHostingView<br/>→ <b>FloatingPanel</b> (NSPanel)"]
+            B4["4&#41; <b>HotkeyService.register()</b><br/>global Cmd+Shift+V via Carbon"]
+            B5["5&#41; <b>ClipboardMonitor.start()</b><br/>Timer fires every 0.5s"]
+            B6["6&#41; <b>setupMonitorCallback()</b><br/>wire $searchText debounce (200ms)"]
+            B1 --> B2 --> B3 --> B4 --> B5 --> B6
+        end
+    end
+
+    %% ===== PUBLISH / OBSERVE (SwiftUI reactivity) =====
+    subgraph REACTIVE ["② PUBLISH / OBSERVE  (SwiftUI reactivity)"]
+        direction LR
+        AS["<b>AppState</b><br/>ObservableObject"]
+        AS -- "@Published clipboardItems" --> VIEWS
+        AS -- "@Published selectedItem" --> VIEWS
+        AS -- "@Published searchText" --> VIEWS
+        AS -- "@Published activeFilter" --> VIEWS
+        AS -- "@Published totalItemCount" --> VIEWS
+        AS -- "@Published statusMessage" --> VIEWS
+
+        subgraph VIEWS ["Views (@ObservedObject appState)"]
+            direction TB
+            PV["PopoverView"]
+            PV --> SBV["SearchBarView<br/>binds $searchText"]
+            PV --> FRV["FilterRowView<br/>binds activeFilter"]
+            PV --> CLV["ClipListView<br/>reads clipboardItems"]
+            PV --> DPV["DetailPanelView<br/>reads selectedItem"]
+            PV --> FV["FooterView<br/>reads totalItemCount"]
+        end
+    end
+
+    %% ===== DATABASE LAYER =====
+    subgraph DB ["③ DATABASE LAYER"]
+        direction TB
+        STOR["<b>StorageService</b><br/>StorageService.swift"]
+        STOR -->|"GRDB read/write"| SQLITE[("SQLite DB<br/>clipboard.db")]
+        STOR -->|"save/load image files"| IMGDIR["Image files on disk<br/>~/Library/.../PasteFlow/images/"]
+        RECORD["<b>ClipboardItemRecord</b><br/>(GRDB FetchableRecord +<br/>PersistableRecord)"] -.->|"maps to/from"| MODEL["<b>ClipboardItem</b><br/>(app model)"]
+        RECORD -.->|"row ↔ struct"| SQLITE
+    end
+
+    %% ===== CLIPBOARD COPY EVENT =====
+    subgraph COPY ["④ CLIPBOARD COPY EVENT  (what happens when you copy)"]
+        direction TB
+        USER_COPY["User copies in any app<br/>(Cmd+C / right-click Copy)"]
+        USER_COPY -->|"macOS updates NSPasteboard"| PB["NSPasteboard.general<br/>changeCount increments"]
+
+        PB -->|"0.5s timer tick"| CM_CHECK{"ClipboardMonitor<br/>checkPasteboard()<br/>changeCount changed?"}
+        CM_CHECK -->|"no change"| SKIP["skip (wait next tick)"]
+        CM_CHECK -->|"changed!"| SUPPRESS{"suppressNextChange?"}
+        SUPPRESS -->|"yes (we pasted it)"| SKIP2["skip + reset flag"]
+        SUPPRESS -->|"no (user copied)"| READ_PB
+
+        subgraph READ_PB ["Read pasteboard content"]
+            direction TB
+            TRY_IMG["Try readImage()<br/>.png → .tiff → .pdf"]
+            TRY_IMG -->|"found image data"| CREATE_ITEM
+            TRY_IMG -->|"no image"| TRY_TXT["Try readText()<br/>pasteboard.string(forType: .string)"]
+            TRY_TXT -->|"found text"| CLASSIFY["ContentClassifier.classify()<br/>→ .text / .code / .link"]
+            CLASSIFY --> CREATE_ITEM["Create ClipboardItem<br/>(id, content, sourceApp,<br/>contentType, contentHash)"]
+        end
+
+        CREATE_ITEM --> SAVE["StorageService.save(item)<br/>→ INSERT into SQLite<br/>(images also saved to disk)"]
+        SAVE --> NOTIFY["Callback: onNewItem(item)<br/>→ AppState.reloadItems()"]
+        NOTIFY --> PUBLISH["@Published clipboardItems updated<br/>→ SwiftUI views re-render"]
+    end
+
+    %% ===== PASTE EVENT =====
+    subgraph PASTE ["⑤ PASTE EVENT  (user selects item from PasteFlow)"]
+        direction TB
+        USER_SELECT["User presses Enter<br/>or Cmd+1..9 in FloatingPanel"]
+        USER_SELECT --> DISMISS["FloatingPanel.hidePanel()"]
+        DISMISS -->|"50ms delay"| PASTE_SIM["<b>PasteSimulator.paste(item)</b>"]
+
+        subgraph PASTE_SIM_DETAIL ["PasteSimulator steps"]
+            direction TB
+            PS1["1&#41; clipboardMonitor.suppressNextChange = true"]
+            PS2["2&#41; Write item to NSPasteboard"]
+            PS3["3&#41; CGEvent: simulate Cmd+V<br/>(keyDown + keyUp)"]
+            PS1 --> PS2 --> PS3
+        end
+
+        PASTE_SIM --> PASTE_SIM_DETAIL
+        PS3 -->|"target app receives Cmd+V"| TARGET["Text/image pasted<br/>into active app"]
+    end
+
+    %% ===== CROSS-FLOW CONNECTIONS =====
+    B2 -.->|"creates"| AS
+    B1 -.->|"creates"| STOR
+    B5 -.->|"creates"| CM_CHECK
+    AS -.->|"calls storage.fetchItems()"| STOR
+    NOTIFY -.->|"triggers"| AS
+
+    %% ===== STYLES =====
+    style MAIN fill:#4A90D9,color:#fff
+    style AD fill:#4A90D9,color:#fff
+    style AS fill:#E8A838,color:#fff
+    style STOR fill:#50C878,color:#fff
+    style SQLITE fill:#50C878,color:#fff
+    style CM_CHECK fill:#FF6B6B,color:#fff
+    style CREATE_ITEM fill:#FF6B6B,color:#fff
+    style PASTE_SIM fill:#7B68EE,color:#fff
+    style INIT fill:#EBF5FB,color:#333
+    style REACTIVE fill:#FEF9E7,color:#333
+    style DB fill:#E8F8F5,color:#333
+    style COPY fill:#FDEDEC,color:#333
+    style PASTE fill:#F4ECF7,color:#333
