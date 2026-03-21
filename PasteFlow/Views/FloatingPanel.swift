@@ -36,7 +36,9 @@ final class FloatingPanel: NSPanel {
     func showPanel() {
         centerOnScreen()
         makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        // Don't call NSApp.activate() — the panel uses .nonactivatingPanel
+        // so it receives keyboard input without stealing focus from the
+        // previous app. This way paste goes to the right target.
     }
 
     func hidePanel() { orderOut(nil) }
