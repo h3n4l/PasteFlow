@@ -12,6 +12,19 @@ final class AppState: ObservableObject {
     @Published var isPanelVisible: Bool = false
     @Published var isAccessibilityGranted: Bool = PasteSimulator.isAccessibilityGranted
 
+    #if ENABLE_AUTO_UPDATE
+    @Published var updateService: UpdateService? {
+        didSet {
+            updateCancellable = updateService?.objectWillChange
+                .receive(on: DispatchQueue.main)
+                .sink { [weak self] _ in
+                    self?.objectWillChange.send()
+                }
+        }
+    }
+    private var updateCancellable: AnyCancellable?
+    #endif
+
     let storage: StorageService
     let clipboardMonitor: ClipboardMonitor
     let hotkeyService: HotkeyService

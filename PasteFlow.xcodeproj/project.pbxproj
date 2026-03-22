@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		2F0A77692F6DD660001448AC /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = AA0000012F6BD00000000001 /* GRDB */; };
+		BB0A77692F6DD660001448AC /* AppUpdater in Frameworks */ = {isa = PBXBuildFile; productRef = BB0000012F6BD00000000001 /* AppUpdater */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2F0A77692F6DD660001448AC /* GRDB in Frameworks */,
+				BB0A77692F6DD660001448AC /* AppUpdater in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +120,7 @@
 			name = PasteFlow;
 			packageProductDependencies = (
 				AA0000012F6BD00000000001 /* GRDB */,
+				BB0000012F6BD00000000001 /* AppUpdater */,
 			);
 			productName = PasteFlow;
 			productReference = 2FEBB3022F6BC9A900FEA936 /* PasteFlow.app */;
@@ -203,6 +206,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				AA0000002F6BD00000000001 /* XCRemoteSwiftPackageReference "GRDB" */,
+				BB0000002F6BD00000000001 /* XCRemoteSwiftPackageReference "AppUpdater" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 2FEBB3032F6BC9A900FEA936 /* Products */;
@@ -336,7 +340,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
-				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG ENABLE_AUTO_UPDATE $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
 			name = Debug;
@@ -392,6 +396,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "ENABLE_AUTO_UPDATE $(inherited)";
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -566,6 +571,14 @@
 				minimumVersion = 7.0.0;
 			};
 		};
+		BB0000002F6BD00000000001 /* XCRemoteSwiftPackageReference "AppUpdater" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/s1ntoneli/AppUpdater.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.2.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -573,6 +586,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = AA0000002F6BD00000000001 /* XCRemoteSwiftPackageReference "GRDB" */;
 			productName = GRDB;
+		};
+		BB0000012F6BD00000000001 /* AppUpdater */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BB0000002F6BD00000000001 /* XCRemoteSwiftPackageReference "AppUpdater" */;
+			productName = AppUpdater;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

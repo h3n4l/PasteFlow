@@ -28,6 +28,9 @@ struct SettingsView: View {
     @AppStorage("retentionDays") private var retentionDays: Int = 30
     @AppStorage("launchAtLogin") private var launchAtLogin: Bool = false
     @State private var showClearConfirmation = false
+    #if ENABLE_AUTO_UPDATE
+    @State private var showUpdateConfirmation = false
+    #endif
     private let retentionOptions = [7, 14, 30, 60, 90]
 
     var body: some View {
@@ -36,7 +39,7 @@ struct SettingsView: View {
             storageTab.tabItem { Label("Storage", systemImage: "internaldrive") }
             healthCheckTab.tabItem { Label("Health", systemImage: "stethoscope") }
             aboutTab.tabItem { Label("About", systemImage: "info.circle") }
-        }.frame(width: 480, height: 280)
+        }.frame(width: 480, height: 340)
     }
 
     private var generalTab: some View {
@@ -135,6 +138,76 @@ struct SettingsView: View {
             Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")")
                 .foregroundColor(.secondary)
             Link("GitHub", destination: URL(string: "https://github.com/h3n4l/PasteFlow")!)
+
+            #if ENABLE_AUTO_UPDATE
+            Divider().padding(.horizontal, 40)
+            updateSection
+            #endif
         }.frame(maxWidth: .infinity, maxHeight: .infinity)
     }
+
+    #if ENABLE_AUTO_UPDATE
+    @ViewBuilder
+    private var updateSection: some View {
+        if let updateService = appState.updateService {
+            if updateService.isInstalling {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text("Installing update...")
+                }
+            } else if updateService.isDownloading {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text("Downloading update...")
+                }
+            } else if updateService.isChecking {
+                HStack(spacing: 8) {
+                    ProgressView().controlSize(.small)
+                    Text("Checking for updates...")
+                }
+            } else if updateService.downloadReady, let version = updateService.newVersion {
+                VStack(spacing: 6) {
+                    Text("PasteFlow \(version) is available")
+                        .foregroundColor(.secondary)
+                        .font(.callout)
+                    Button("Update Now") {
+                        showUpdateConfirmation = true
+                    }
+                    .alert("Update Available", isPresented: $showUpdateConfirmation) {
+                        Button("Update Now") {
+                            updateService.installUpdate()
+                        }
+                        Button("Later", role: .cancel) {}
+                    } message: {
+                        let current = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "unknown"
+                        Text("PasteFlow \(version) is available. You're running v\(current). The app will restart after updating.")
+                    }
+                }
+            } else if updateService.updateAvailable, let version = updateService.newVersion {
+                VStack(spacing: 6) {
+                    Text("PasteFlow \(version) is available, preparing download...")
+                        .foregroundColor(.secondary)
+                        .font(.callout)
+                }
+            } else if updateService.isUpToDate {
+                Text("You're running the latest version")
+                    .foregroundColor(.secondary)
+                    .font(.callout)
+            } else if let error = updateService.error {
+                VStack(spacing: 6) {
+                    Text(error)
+                        .foregroundColor(.red)
+                        .font(.callout)
+                    Button("Retry") {
+                        updateService.checkForUpdates()
+                    }
+                }
+            } else {
+                Button("Check for Updates") {
+                    updateService.checkForUpdates()
+                }
+            }
+        }
+    }
+    #endif
 }

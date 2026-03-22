@@ -59,6 +59,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if !PasteSimulator.isAccessibilityGranted {
                 showAccessibilityDialog()
             }
+
+            #if ENABLE_AUTO_UPDATE
+            let updateService = UpdateService()
+            state.updateService = updateService
+            updateService.checkForUpdates(silent: true)
+            #endif
         } catch {
             let alert = NSAlert()
             alert.messageText = "PasteFlow Failed to Start"
