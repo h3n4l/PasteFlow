@@ -10,13 +10,13 @@ struct FooterView: View {
                 Text(message).font(.system(size: 11)).foregroundColor(.red.opacity(0.7))
             } else if !isAccessibilityGranted {
                 Text("Accessibility: off \u{2014} manual paste mode")
-                    .font(.system(size: 11)).foregroundColor(Color(hex: 0x999999))
+                    .font(.system(size: 11)).foregroundColor(Color(.textSecondary))
             }
             Spacer()
-            Text("\(itemCount) items").font(.system(size: 11)).foregroundColor(Color(hex: 0x999999))
+            Text("\(itemCount) items").font(.system(size: 11)).foregroundColor(Color(.textSecondary))
         }
         .padding(.horizontal, 12).padding(.vertical, 7).frame(height: 27)
-        .background(Color.white)
-        .overlay(Rectangle().frame(height: 1).foregroundColor(Color(hex: 0xE5E5E5)), alignment: .top)
+        .background(Color(.backgroundPrimary))
+        .overlay(Rectangle().frame(height: 1).foregroundColor(Color(.borderDivider)), alignment: .top)
     }
 }

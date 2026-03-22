@@ -28,9 +28,9 @@ struct PopoverView: View {
             )
         }
         .frame(width: 560, height: 456)
-        .background(Color.white)
+        .background(Color(.backgroundPrimary))
         .cornerRadius(12)
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: 0xE5E5E5), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.borderDivider), lineWidth: 1))
         .onChange(of: appState.isPanelVisible) { visible in
             if visible {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {

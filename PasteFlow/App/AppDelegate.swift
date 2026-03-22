@@ -1,8 +1,10 @@
 import AppKit
+import Combine
 import SwiftUI
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: FloatingPanel?
+    private var cancellables = Set<AnyCancellable>()
     // Initialized eagerly so it's available when SwiftUI evaluates the Settings scene
     lazy var appState: AppState = {
         let storage = try! createStorage()
@@ -20,6 +22,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             hostingView.frame = NSRect(x: 0, y: 0, width: 560, height: 456)
             let panel = FloatingPanel(contentView: hostingView)
             self.panel = panel
+
+            panel.updateAppearance(state.appearanceMode)
+            state.$appearanceMode
+                .receive(on: RunLoop.main)
+                .sink { [weak panel] mode in
+                    panel?.updateAppearance(mode)
+                }
+                .store(in: &cancellables)
 
             // Wire up keyboard shortcuts on the panel
             panel.onArrowUp = { [weak state] in state?.selectPrevious() }

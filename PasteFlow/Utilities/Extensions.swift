@@ -23,3 +23,19 @@ extension Color {
         self.init(.sRGB, red: red, green: green, blue: blue, opacity: opacity)
     }
 }
+
+enum AppearanceMode: String, CaseIterable {
+    case system, light, dark
+
+    var displayName: String {
+        switch self {
+        case .system: return "System"
+        case .light: return "Light"
+        case .dark: return "Dark"
+        }
+    }
+}
+
+// Semantic colors are defined in Assets.xcassets/Colors/ and accessed via
+// Xcode-generated ColorResource symbols, e.g. Color(.backgroundPrimary).
+// No manual Color extension needed.
