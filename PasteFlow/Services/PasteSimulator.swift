@@ -54,6 +54,8 @@ enum PasteSimulator {
         case .jpeg: return NSPasteboard.PasteboardType("public.jpeg")
         case .gif: return NSPasteboard.PasteboardType("com.compuserve.gif")
         case .bmp: return NSPasteboard.PasteboardType("com.microsoft.bmp")
+        case .webp: return NSPasteboard.PasteboardType("org.webmproject.webp")
+        case .heic: return NSPasteboard.PasteboardType("public.heic")
         case .pdf: return .pdf
         }
     }

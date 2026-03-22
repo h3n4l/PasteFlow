@@ -43,7 +43,9 @@ struct ClipRowView: View {
     private var previewText: String {
         switch item.content {
         case .text(let text): return text.replacingOccurrences(of: "\n", with: " ")
-        case .image(_, let format): return "Image (\(format.rawValue.uppercased()))"
+        case .image(_, let format):
+            if let name = item.sourceFilename { return name }
+            return "\(format.rawValue.uppercased()) image"
         case .file(let refs):
             if refs.count == 1 { return refs[0].name }
             return "\(refs.count) files"
@@ -58,8 +60,8 @@ struct ClipRowView: View {
                 return "\(timeAgo) \u{00B7} \(host)"
             }
             return "\(timeAgo) \u{00B7} \(text.count) chars"
-        case .image(let data, _):
-            return "\(timeAgo) \u{00B7} \(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file))"
+        case .image(let data, let format):
+            return "\(timeAgo) \u{00B7} \(format.rawValue.uppercased()) image \u{00B7} \(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file))"
         case .file(let refs):
             if refs.count == 1 {
                 return "\(timeAgo) \u{00B7} \(refs[0].utiDescription) \u{00B7} \(ByteCountFormatter.string(fromByteCount: refs[0].size, countStyle: .file))"

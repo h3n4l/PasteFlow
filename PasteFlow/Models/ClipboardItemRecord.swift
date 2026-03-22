@@ -14,6 +14,7 @@ struct ClipboardItemRecord: Codable, FetchableRecord, PersistableRecord {
     let characterCount: Int?
     let imageSize: Int?
     let contentHash: String
+    let sourceFilename: String?
 
     enum Columns {
         static let id = Column(CodingKeys.id)
@@ -26,5 +27,6 @@ struct ClipboardItemRecord: Codable, FetchableRecord, PersistableRecord {
         static let characterCount = Column(CodingKeys.characterCount)
         static let imageSize = Column(CodingKeys.imageSize)
         static let contentHash = Column(CodingKeys.contentHash)
+        static let sourceFilename = Column(CodingKeys.sourceFilename)
     }
 }
