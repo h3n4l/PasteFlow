@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ClipListView: View {
     @ObservedObject var appState: AppState
+    var onItemActivate: ((ClipboardItem) -> Void)?
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
@@ -10,7 +11,13 @@ struct ClipListView: View {
                         ClipRowView(item: item, isSelected: appState.selectedItem?.id == item.id, shortcutIndex: index)
                             .id(item.id)
                             .contentShape(Rectangle())
-                            .onTapGesture { appState.selectedItem = item }
+                            .onTapGesture {
+                                if appState.selectedItem?.id == item.id {
+                                    onItemActivate?(item)
+                                } else {
+                                    appState.selectedItem = item
+                                }
+                            }
                             .onAppear {
                                 if index == appState.filteredItems.count - 5 { appState.loadMoreItems() }
                             }
