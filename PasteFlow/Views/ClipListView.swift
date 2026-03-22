@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ClipListView: View {
     @ObservedObject var appState: AppState
-    var onItemDoubleClick: ((ClipboardItem) -> Void)?
+    var onItemActivate: ((ClipboardItem) -> Void)?
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
@@ -13,7 +13,7 @@ struct ClipListView: View {
                             .contentShape(Rectangle())
                             .onTapGesture {
                                 if appState.selectedItem?.id == item.id {
-                                    onItemDoubleClick?(item)
+                                    onItemActivate?(item)
                                 } else {
                                     appState.selectedItem = item
                                 }

@@ -13,7 +13,7 @@ struct PopoverView: View {
                 set: { appState.setFilter($0) }
             ))
             HStack(spacing: 0) {
-                ClipListView(appState: appState, onItemDoubleClick: { item in pasteAndDismiss(item) })
+                ClipListView(appState: appState, onItemActivate: { item in pasteAndDismiss(item) })
                 DetailPanelView(
                     item: appState.selectedItem,
                     onPaste: { item in pasteAndDismiss(item) },
