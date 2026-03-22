@@ -150,7 +150,17 @@ struct SettingsView: View {
     @ViewBuilder
     private var updateSection: some View {
         if let updateService = appState.updateService {
-            if updateService.isInstalling {
+            // Error is checked early so it's not hidden behind stale downloading/checking state
+            if let error = updateService.error {
+                VStack(spacing: 6) {
+                    Text(error)
+                        .foregroundColor(.red)
+                        .font(.callout)
+                    Button("Retry") {
+                        updateService.checkForUpdates()
+                    }
+                }
+            } else if updateService.isInstalling {
                 HStack(spacing: 8) {
                     ProgressView().controlSize(.small)
                     Text("Installing update...")
@@ -193,15 +203,6 @@ struct SettingsView: View {
                 Text("You're running the latest version")
                     .foregroundColor(.secondary)
                     .font(.callout)
-            } else if let error = updateService.error {
-                VStack(spacing: 6) {
-                    Text(error)
-                        .foregroundColor(.red)
-                        .font(.callout)
-                    Button("Retry") {
-                        updateService.checkForUpdates()
-                    }
-                }
             } else {
                 Button("Check for Updates") {
                     updateService.checkForUpdates()

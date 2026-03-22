@@ -2,7 +2,35 @@
 import AppUpdater
 import Combine
 import Foundation
+import Version
 import os.log
+
+/// Custom release provider that configures the JSON decoder to use tolerant
+/// version parsing, so tag names like "v0.0.2" are decoded correctly.
+/// Delegates download/asset operations to the default GithubReleaseProvider.
+private struct TolerantGithubReleaseProvider: ReleaseProvider {
+    private let fallback = GithubReleaseProvider()
+
+    func fetchReleases(owner: String, repo: String, proxy: URLRequestProxy?) async throws -> [Release] {
+        let slug = "\(owner)/\(repo)"
+        let url = URL(string: "https://api.github.com/repos/\(slug)/releases")!
+        let (data, response) = try await URLSession.shared.data(from: url)
+        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+            throw URLError(.badServerResponse)
+        }
+        let decoder = JSONDecoder()
+        decoder.userInfo[.decodingMethod] = DecodingMethod.tolerant
+        return try decoder.decode([Release].self, from: data)
+    }
+
+    func download(asset: Release.Asset, to saveLocation: URL, proxy: URLRequestProxy?) async throws -> AsyncThrowingStream<DownloadingState, Error> {
+        return try await fallback.download(asset: asset, to: saveLocation, proxy: proxy)
+    }
+
+    func fetchAssetData(asset: Release.Asset, proxy: URLRequestProxy?) async throws -> Data {
+        return try await fallback.fetchAssetData(asset: asset, proxy: proxy)
+    }
+}
 
 /// Wraps AppUpdater to expose update state for SwiftUI views.
 /// Not annotated @MainActor to match AppState's pattern — all @Published
@@ -22,9 +50,17 @@ final class UpdateService: ObservableObject {
     @Published var error: String?
 
     init() {
-        self.updater = AppUpdater(owner: "h3n4l", repo: "PasteFlow")
+        self.updater = AppUpdater(owner: "h3n4l", repo: "PasteFlow", provider: TolerantGithubReleaseProvider())
+        // Debug builds are signed with a development certificate that differs
+        // from the release build's signature, causing AppUpdater's code signing
+        // validation to fail. Skip the check so updates can be tested locally.
+        #if DEBUG
+        self.updater.skipCodeSignValidation = true
+        #endif
+        observeUpdaterState()
+    }
 
-        // Observe AppUpdater's state transitions via Combine
+    private func observeUpdaterState() {
         cancellable = updater.$state
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
@@ -59,6 +95,10 @@ final class UpdateService: ObservableObject {
         isChecking = true
         isUpToDate = false
         error = nil
+        // Reconnect observer in case it was disconnected after a previous failure
+        if cancellable == nil {
+            observeUpdaterState()
+        }
 
         updater.check(
             success: { [weak self] in
@@ -79,18 +119,30 @@ final class UpdateService: ObservableObject {
                 DispatchQueue.main.async {
                     guard let self else { return }
                     self.isChecking = false
-                    // AppUpdater throws .noValidUpdate when already up to date
-                    if let appUpdaterError = err as? AppUpdater.Error,
-                       appUpdaterError == .noValidUpdate {
+                    // Reset download state — AppUpdater's internal progress timer
+                    // may keep pushing .downloading state via Combine even after
+                    // failure, so disconnect the observer to prevent it from
+                    // overwriting our state, then clear the flags.
+                    self.cancellable = nil
+                    self.isDownloading = false
+                    self.updateAvailable = false
+                    // AppUpdater throws .noValidUpdate when no viable asset is found,
+                    // and AUError.cancelled when current version >= latest release.
+                    let isUpToDateError: Bool = {
+                        if let e = err as? AppUpdater.Error, e == .noValidUpdate { return true }
+                        if case AUError.cancelled = err { return true }
+                        return false
+                    }()
+                    if isUpToDateError {
                         if !silent {
                             self.isUpToDate = true
                         }
                         self.logger.info("Already up to date")
                     } else {
                         if !silent {
-                            self.error = "Couldn't check for updates. Please check your connection."
+                            self.error = "Update failed: \(err.localizedDescription)"
                         }
-                        self.logger.error("Update check failed: \(err.localizedDescription)")
+                        self.logger.error("Update check failed: \(String(describing: err))")
                     }
                 }
             }
