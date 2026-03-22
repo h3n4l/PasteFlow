@@ -9,25 +9,25 @@ struct ClipRowView: View {
         HStack(spacing: 8) {
             Image(systemName: iconName)
                 .font(.system(size: 12))
-                .foregroundColor(isSelected ? Color(hex: 0x185FA5) : Color(hex: 0x999999))
+                .foregroundColor(isSelected ? Color(.accentBlue) : Color(.textSecondary))
                 .frame(width: 12, height: 12)
             VStack(alignment: .leading, spacing: 2) {
                 Text(previewText)
                     .font(.system(size: 13))
-                    .foregroundColor(isSelected ? Color(hex: 0x185FA5) : Color(hex: 0x1A1A1A))
+                    .foregroundColor(isSelected ? Color(.accentBlue) : Color(.textPrimary))
                     .lineLimit(1).truncationMode(.tail)
                 Text(metadataText)
                     .font(.system(size: 11))
-                    .foregroundColor(isSelected ? Color(hex: 0x185FA5).opacity(0.6) : Color(hex: 0x999999))
+                    .foregroundColor(isSelected ? Color(.accentBlue).opacity(0.6) : Color(.textSecondary))
             }.frame(maxWidth: .infinity, alignment: .leading)
             if let index = shortcutIndex, index < 9 {
                 Text("Cmd+\(index + 1)")
                     .font(.system(size: 11))
-                    .foregroundColor(isSelected ? Color(hex: 0x185FA5).opacity(0.5) : Color(hex: 0x999999))
+                    .foregroundColor(isSelected ? Color(.accentBlue).opacity(0.5) : Color(.textSecondary))
             }
         }
         .padding(.horizontal, 12).padding(.vertical, 7).frame(height: 44)
-        .background(isSelected ? Color(hex: 0xE6F1FB) : Color.white)
+        .background(isSelected ? Color(.backgroundSelected) : Color(.backgroundPrimary))
     }
 
     private var iconName: String {
@@ -71,4 +71,3 @@ struct ClipRowView: View {
         }
     }
 }
-

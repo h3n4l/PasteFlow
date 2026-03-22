@@ -7,7 +7,7 @@ struct SearchBarView: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(Color(hex: 0x999999))
+                .foregroundColor(Color(.textSecondary))
                 .font(.system(size: 14))
             TextField("Search clipboard...", text: $searchText)
                 .textFieldStyle(.plain)
@@ -16,11 +16,11 @@ struct SearchBarView: View {
             Spacer()
             Text("Cmd+Shift+V")
                 .font(.system(size: 11))
-                .foregroundColor(Color(hex: 0x999999))
+                .foregroundColor(Color(.textSecondary))
         }
         .padding(.horizontal, 12)
         .frame(height: 40)
-        .background(Color.white)
-        .overlay(Rectangle().frame(height: 1).foregroundColor(Color(hex: 0xE5E5E5)), alignment: .bottom)
+        .background(Color(.backgroundPrimary))
+        .overlay(Rectangle().frame(height: 1).foregroundColor(Color(.borderDivider)), alignment: .bottom)
     }
 }

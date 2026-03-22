@@ -44,6 +44,16 @@ struct SettingsView: View {
 
     private var generalTab: some View {
         VStack(alignment: .leading, spacing: 16) {
+            SettingsRow("Appearance") {
+                Picker("", selection: $appState.appearanceMode) {
+                    ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                        Text(mode.displayName).tag(mode)
+                    }
+                }
+                .labelsHidden()
+                .frame(width: 120)
+            }
+
             SettingsRow("Startup") {
                 Toggle("Launch at login", isOn: $launchAtLogin)
                     .toggleStyle(.checkbox)

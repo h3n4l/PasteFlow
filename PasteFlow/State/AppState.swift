@@ -10,6 +10,17 @@ final class AppState: ObservableObject {
     @Published var totalItemCount: Int = 0
     @Published var statusMessage: String?
     @Published var isPanelVisible: Bool = false
+    @Published var appearanceMode: AppearanceMode = {
+        if let raw = UserDefaults.standard.string(forKey: "appearanceMode"),
+           let mode = AppearanceMode(rawValue: raw) {
+            return mode
+        }
+        return .system
+    }() {
+        didSet {
+            UserDefaults.standard.set(appearanceMode.rawValue, forKey: "appearanceMode")
+        }
+    }
     @Published var isAccessibilityGranted: Bool = PasteSimulator.isAccessibilityGranted
 
     #if ENABLE_AUTO_UPDATE
