@@ -31,6 +31,8 @@ final class UpdateService: ObservableObject {
                 guard let self else { return }
                 switch state {
                 case .none:
+                    self.updateAvailable = false
+                    self.newVersion = nil
                     self.isDownloading = false
                     self.downloadReady = false
                 case .newVersionDetected(let release, _):

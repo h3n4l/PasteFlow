@@ -135,7 +135,7 @@ Simple alert dialog shown when a user triggers an update (from menu item or Sett
 3. If newer version found → sets `updateAvailable = true`
 4. User sees indicator (menu item or Settings) and clicks "Update Now"
 5. AppUpdater downloads `PasteFlow-x.y.z.zip`
-6. Extracts `.app` from DMG, verifies code signing identity matches running app
+6. Extracts the new `.app` from the downloaded zip and verifies its code signing identity matches the running app
 7. Moves old `.app` to trash, moves new `.app` into place
 8. Relaunches the new version
 

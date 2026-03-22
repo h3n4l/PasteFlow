@@ -117,17 +117,17 @@ final class UpdateService: ObservableObject {
                     self.downloadReady = false
                 case .newVersionDetected(let release, _):
                     self.updateAvailable = true
-                    self.newVersion = release.tag
+                    self.newVersion = release.tagName.description
                     self.isDownloading = false
                     self.downloadReady = false
                 case .downloading(let release, _, _):
                     self.updateAvailable = true
-                    self.newVersion = release.tag
+                    self.newVersion = release.tagName.description
                     self.isDownloading = true
                     self.downloadReady = false
                 case .downloaded(let release, _, _):
                     self.updateAvailable = true
-                    self.newVersion = release.tag
+                    self.newVersion = release.tagName.description
                     self.isDownloading = false
                     self.downloadReady = true
                 }
