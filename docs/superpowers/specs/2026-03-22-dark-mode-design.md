@@ -26,13 +26,17 @@ Add dark mode support to PasteFlow's floating panel UI, with a user-selectable a
 | `textSecondary`     | `#999999`   | `#888888`   | Timestamps, metadata, placeholders |
 | `textTertiary`      | `#666666`   | `#AAAAAA`   | Section headers ("PREVIEW")        |
 | `accentBlue`        | `#185FA5`   | `#4A9EE5`   | Selected item icons, active states |
-| `accentPurple`      | `#3C3489`   | `#7B73D1`   | Button text, pill active text      |
-| `borderDivider`     | `#E5E5E5`   | `#3A3A3A`   | All divider lines and borders      |
+| `accentPurple`      | `#3C3489`   | `#A49BFF`   | Button text, pill active text      |
+| `borderDivider`     | `#E5E5E5`   | `#3A3A3A`   | Divider lines                      |
+| `borderButton`      | `#E5E5E5`   | `#4A4A4A`   | Button border strokes              |
 | `borderPill`        | `#CECBF6`   | `#3D3966`   | Filter pill border                 |
 
 ### Notes
 
 - Accent colors are lightened in dark mode for sufficient contrast against dark backgrounds
+- `accentPurple` dark value (`#A49BFF`) chosen for WCAG AA contrast on `backgroundPill` (`#2A2745`) — ratio ~5.2:1
+- `textSecondary` dark value (`#888888`) on `backgroundPrimary` (`#1E1E1E`) — ratio ~4.5:1 (borderline AA, acceptable for secondary text)
+- `borderButton` is separate from `borderDivider` to ensure button outlines remain visible against dark backgrounds
 - Text colors are inverted — light text on dark backgrounds
 - Selected row and pill backgrounds use deeper, muted tones of their light counterparts
 
@@ -55,6 +59,7 @@ Assets.xcassets/
     accentBlue.colorset/Contents.json
     accentPurple.colorset/Contents.json
     borderDivider.colorset/Contents.json
+    borderButton.colorset/Contents.json
     borderPill.colorset/Contents.json
 ```
 
@@ -79,8 +84,9 @@ Each `Contents.json` defines two appearances:
 
 ### Appearance Preference
 
-- Store preference in `UserDefaults` with key `"appearanceMode"` (values: `"system"`, `"light"`, `"dark"`)
-- Default: `"system"`
+- Define an `AppearanceMode` enum (`system`, `light`, `dark`) conforming to `String, CaseIterable`
+- Store preference in `UserDefaults` via `@AppStorage("appearanceMode")`
+- Default: `.system`
 - Add `appearanceMode` property to `AppState`
 - When preference changes, update `FloatingPanel`'s `appearance` property:
   - `"system"` → set `appearance = nil` (follows system)
@@ -101,7 +107,9 @@ Each `Contents.json` defines two appearances:
 
 ### View Changes
 
-Replace all `Color(hex: 0x...)` calls with `Color("semanticName")`:
+Replace all hardcoded colors — both `Color(hex: 0x...)` and `Color.white` — with semantic `Color("name")` references. Use a type-safe extension (`Color.backgroundPrimary`, etc.) to prevent typo-related silent failures.
+
+Opacity modifiers (e.g., `Color(hex: 0x185FA5).opacity(0.6)`) should be preserved as `Color.accentBlue.opacity(0.6)` — verify visual results in both modes during testing.
 
 | File | Changes |
 |------|---------|
@@ -110,8 +118,29 @@ Replace all `Color(hex: 0x...)` calls with `Color("semanticName")`:
 | `FilterRowView.swift` | `backgroundPrimary`, `accentPurple`, `backgroundPill`, `borderPill`, `textSecondary` |
 | `ClipListView.swift` | `backgroundPrimary` |
 | `ClipRowView.swift` | `backgroundSelected`, `backgroundPrimary`, `accentBlue`, `textSecondary`, `textPrimary`, `borderDivider` |
-| `DetailPanelView.swift` | `textTertiary`, `textSecondary`, `backgroundPreview`, `accentPurple`, `backgroundPill`, `borderDivider` |
+| `DetailPanelView.swift` | `textTertiary`, `textSecondary`, `backgroundPreview`, `accentPurple`, `backgroundPill`, `borderButton` |
 | `FooterView.swift` | `backgroundPrimary`, `textSecondary`, `borderDivider` |
+
+### Type-Safe Color Extension
+
+Add to `Extensions.swift` to prevent string typos:
+
+```swift
+extension Color {
+    static let backgroundPrimary = Color("backgroundPrimary")
+    static let backgroundPreview = Color("backgroundPreview")
+    static let backgroundSelected = Color("backgroundSelected")
+    static let backgroundPill = Color("backgroundPill")
+    static let textPrimary = Color("textPrimary")
+    static let textSecondary = Color("textSecondary")
+    static let textTertiary = Color("textTertiary")
+    static let accentBlue = Color("accentBlue")
+    static let accentPurple = Color("accentPurple")
+    static let borderDivider = Color("borderDivider")
+    static let borderButton = Color("borderButton")
+    static let borderPill = Color("borderPill")
+}
+```
 
 ### What Stays the Same
 
@@ -119,12 +148,19 @@ Replace all `Color(hex: 0x...)` calls with `Color("semanticName")`:
 - `SettingsView` system color usage — unchanged
 - Image/icon assets — SF Symbols adapt to appearance automatically
 - Error colors (`.red.opacity(0.7)`) — system colors, adapt automatically
+- `TextField` text color in `SearchBarView` — system default, adapts automatically
+- `DetailPanelView` background — inherited from `PopoverView`'s `backgroundPrimary`, no explicit color needed
 
 ## Testing
 
-- Verify all 11 color sets render correctly in both appearances
+- Verify all 12 color sets render correctly in both appearances
 - Toggle between System/Light/Dark in Settings and confirm panel updates immediately
 - Confirm Settings window follows system appearance regardless of panel setting
-- Verify text contrast meets WCAG AA (4.5:1) in both modes
+- Verify text contrast meets WCAG AA (4.5:1) in both modes, especially:
+  - `accentPurple` on `backgroundPill` (dark mode)
+  - `textSecondary` on `backgroundPrimary` (dark mode)
+  - `accentBlue.opacity(0.5-0.6)` on `backgroundSelected` (dark mode)
 - Test that SF Symbol icons adapt correctly
 - Test persistence — quit and relaunch, appearance preference should be retained
+- Test system appearance change while panel is visible with "System" mode selected
+- Verify no white background flashes during panel show/hide in dark mode
