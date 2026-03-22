@@ -79,10 +79,19 @@ final class UpdateService: ObservableObject {
                 DispatchQueue.main.async {
                     guard let self else { return }
                     self.isChecking = false
-                    if !silent {
-                        self.error = "Couldn't check for updates. Please check your connection."
+                    // AppUpdater throws .noValidUpdate when already up to date
+                    if let appUpdaterError = err as? AppUpdater.Error,
+                       appUpdaterError == .noValidUpdate {
+                        if !silent {
+                            self.isUpToDate = true
+                        }
+                        self.logger.info("Already up to date")
+                    } else {
+                        if !silent {
+                            self.error = "Couldn't check for updates. Please check your connection."
+                        }
+                        self.logger.error("Update check failed: \(err.localizedDescription)")
                     }
-                    self.logger.error("Update check failed: \(err.localizedDescription)")
                 }
             }
         )
