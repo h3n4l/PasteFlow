@@ -36,6 +36,7 @@ struct ClipRowView: View {
         case .code: return "chevron.left.forwardslash.chevron.right"
         case .link: return "link"
         case .image: return "photo"
+        case .file: return "doc.on.doc"
         }
     }
 
@@ -43,6 +44,9 @@ struct ClipRowView: View {
         switch item.content {
         case .text(let text): return text.replacingOccurrences(of: "\n", with: " ")
         case .image(_, let format): return "Image (\(format.rawValue.uppercased()))"
+        case .file(let refs):
+            if refs.count == 1 { return refs[0].name }
+            return "\(refs.count) files"
         }
     }
 
@@ -56,6 +60,12 @@ struct ClipRowView: View {
             return "\(timeAgo) \u{00B7} \(text.count) chars"
         case .image(let data, _):
             return "\(timeAgo) \u{00B7} \(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file))"
+        case .file(let refs):
+            if refs.count == 1 {
+                return "\(timeAgo) \u{00B7} \(refs[0].utiDescription) \u{00B7} \(ByteCountFormatter.string(fromByteCount: refs[0].size, countStyle: .file))"
+            }
+            let totalSize = refs.reduce(Int64(0)) { $0 + $1.size }
+            return "\(timeAgo) \u{00B7} \(refs.count) files \u{00B7} \(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)) total"
         }
     }
 }

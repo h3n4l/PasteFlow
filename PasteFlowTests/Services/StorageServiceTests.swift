@@ -119,6 +119,78 @@ final class StorageServiceTests: XCTestCase {
         XCTAssertEqual(page2[0].id, item1.id)
     }
 
+    func testSaveAndFetchFileItem() throws {
+        let refs = [
+            FileReference(path: "/Users/test/doc.pdf", name: "doc.pdf", size: 204800,
+                           utiType: "com.adobe.pdf", utiDescription: "PDF Document")
+        ]
+        let item = ClipboardItem(content: .file(refs), sourceApp: "Finder", contentType: .file)
+        try storage.save(item)
+        let fetched = try storage.fetchItems(filter: nil, search: nil, limit: 50, offset: 0)
+        XCTAssertEqual(fetched.count, 1)
+        XCTAssertEqual(fetched[0].id, item.id)
+        XCTAssertEqual(fetched[0].contentType, .file)
+        if case .file(let fetchedRefs) = fetched[0].content {
+            XCTAssertEqual(fetchedRefs.count, 1)
+            XCTAssertEqual(fetchedRefs[0].path, "/Users/test/doc.pdf")
+            XCTAssertEqual(fetchedRefs[0].name, "doc.pdf")
+            XCTAssertEqual(fetchedRefs[0].size, 204800)
+            XCTAssertEqual(fetchedRefs[0].utiType, "com.adobe.pdf")
+            XCTAssertEqual(fetchedRefs[0].utiDescription, "PDF Document")
+        } else {
+            XCTFail("Expected file content")
+        }
+    }
+
+    func testFilterByFileType() throws {
+        try storage.save(ClipboardItem(content: .text("hello"), sourceApp: nil, contentType: .text))
+        let refs = [FileReference(path: "/a.txt", name: "a.txt", size: 100,
+                                   utiType: "public.plain-text", utiDescription: "Text")]
+        try storage.save(ClipboardItem(content: .file(refs), sourceApp: nil, contentType: .file))
+        let fileOnly = try storage.fetchItems(filter: .file, search: nil, limit: 50, offset: 0)
+        XCTAssertEqual(fileOnly.count, 1)
+        XCTAssertEqual(fileOnly[0].contentType, .file)
+    }
+
+    func testFileDeduplication() throws {
+        // Hash is path-based only — same path with different size produces same hash,
+        // so the second save replaces the first (deduplication by path set).
+        let refs = [FileReference(path: "/a.txt", name: "a.txt", size: 100,
+                                   utiType: "public.plain-text", utiDescription: "Text")]
+        let item1 = ClipboardItem(content: .file(refs), sourceApp: nil, contentType: .file)
+        try storage.save(item1)
+        let refsUpdated = [FileReference(path: "/a.txt", name: "a.txt", size: 200,
+                                          utiType: "public.plain-text", utiDescription: "Text")]
+        let item2 = ClipboardItem(content: .file(refsUpdated), sourceApp: nil, contentType: .file)
+        try storage.save(item2)
+        let fetched = try storage.fetchItems(filter: nil, search: nil, limit: 50, offset: 0)
+        XCTAssertEqual(fetched.count, 1)
+        XCTAssertEqual(fetched[0].id, item2.id)
+    }
+
+    func testSaveAndFetchMultiFileItem() throws {
+        let refs = [
+            FileReference(path: "/Users/test/a.txt", name: "a.txt", size: 100,
+                           utiType: "public.plain-text", utiDescription: "Plain Text"),
+            FileReference(path: "/Users/test/b.pdf", name: "b.pdf", size: 204800,
+                           utiType: "com.adobe.pdf", utiDescription: "PDF Document"),
+            FileReference(path: "/Users/test/c.png", name: "c.png", size: 51200,
+                           utiType: "public.png", utiDescription: "PNG Image"),
+        ]
+        let item = ClipboardItem(content: .file(refs), sourceApp: "Finder", contentType: .file)
+        try storage.save(item)
+        let fetched = try storage.fetchItems(filter: nil, search: nil, limit: 50, offset: 0)
+        XCTAssertEqual(fetched.count, 1)
+        if case .file(let fetchedRefs) = fetched[0].content {
+            XCTAssertEqual(fetchedRefs.count, 3)
+            XCTAssertEqual(fetchedRefs[0].name, "a.txt")
+            XCTAssertEqual(fetchedRefs[1].name, "b.pdf")
+            XCTAssertEqual(fetchedRefs[2].name, "c.png")
+        } else {
+            XCTFail("Expected file content")
+        }
+    }
+
     func testDeleteImageRemovesFile() throws {
         let imageData = Data(repeating: 0xCD, count: 256)
         let item = ClipboardItem(content: .image(imageData, .png), sourceApp: nil, contentType: .image)

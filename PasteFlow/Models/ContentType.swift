@@ -5,4 +5,5 @@ enum ContentType: String, Codable, CaseIterable {
     case code
     case link
     case image
+    case file
 }

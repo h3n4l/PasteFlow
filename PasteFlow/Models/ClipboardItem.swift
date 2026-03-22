@@ -1,9 +1,18 @@
 import Foundation
 import CryptoKit
 
+struct FileReference: Codable, Equatable {
+    let path: String
+    let name: String
+    let size: Int64
+    let utiType: String
+    let utiDescription: String
+}
+
 enum ClipboardContent {
     case text(String)
     case image(Data, ImageFormat)
+    case file([FileReference])
 }
 
 struct ClipboardItem: Identifiable {
@@ -33,6 +42,12 @@ struct ClipboardItem: Identifiable {
             self.characterCount = nil
             self.imageSize = data.count
             let hash = SHA256.hash(data: data)
+            self.contentHash = hash.map { String(format: "%02x", $0) }.joined()
+        case .file(let refs):
+            self.characterCount = nil
+            self.imageSize = nil
+            let joined = refs.map(\.path).sorted().joined(separator: "\n")
+            let hash = SHA256.hash(data: Data(joined.utf8))
             self.contentHash = hash.map { String(format: "%02x", $0) }.joined()
         }
     }

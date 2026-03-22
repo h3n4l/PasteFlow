@@ -55,10 +55,20 @@ final class StorageService {
             imagePath = filename
         }
 
+        let textContent: String?
+        switch item.content {
+        case .text(let text):
+            textContent = text
+        case .file(let refs):
+            textContent = String(data: try JSONEncoder().encode(refs), encoding: .utf8)
+        case .image:
+            textContent = nil
+        }
+
         let record = ClipboardItemRecord(
             id: item.id.uuidString,
             contentType: item.contentType.rawValue,
-            textContent: { if case .text(let text) = item.content { return text }; return nil }(),
+            textContent: textContent,
             imagePath: imagePath,
             imageFormat: { if case .image(_, let format) = item.content { return format.rawValue }; return nil }(),
             sourceApp: item.sourceApp,
@@ -193,10 +203,14 @@ final class StorageService {
            let imgPath = record.imagePath,
            let formatStr = record.imageFormat,
            let format = ImageFormat(rawValue: formatStr) {
-            // Load image data from disk
             let fileURL = imagesDirectory.appendingPathComponent(imgPath)
             let data = (try? Data(contentsOf: fileURL)) ?? Data()
             content = .image(data, format)
+        } else if contentType == .file,
+                  let jsonStr = record.textContent,
+                  let jsonData = jsonStr.data(using: .utf8),
+                  let refs = try? JSONDecoder().decode([FileReference].self, from: jsonData) {
+            content = .file(refs)
         } else {
             content = .text(record.textContent ?? "")
         }
