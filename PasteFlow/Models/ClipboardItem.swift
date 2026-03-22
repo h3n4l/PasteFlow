@@ -24,8 +24,9 @@ struct ClipboardItem: Identifiable {
     let characterCount: Int?
     let imageSize: Int?
     let contentHash: String
+    let sourceFilename: String?
 
-    init(id: UUID = UUID(), content: ClipboardContent, sourceApp: String?, createdAt: Date = Date(), contentType: ContentType) {
+    init(id: UUID = UUID(), content: ClipboardContent, sourceApp: String?, createdAt: Date = Date(), contentType: ContentType, sourceFilename: String? = nil) {
         self.id = id
         self.content = content
         self.sourceApp = sourceApp
@@ -50,11 +51,13 @@ struct ClipboardItem: Identifiable {
             let hash = SHA256.hash(data: Data(joined.utf8))
             self.contentHash = hash.map { String(format: "%02x", $0) }.joined()
         }
+        self.sourceFilename = sourceFilename
     }
 
     internal init(id: UUID, content: ClipboardContent, sourceApp: String?,
                   createdAt: Date, contentType: ContentType,
-                  characterCount: Int?, imageSize: Int?, contentHash: String) {
+                  characterCount: Int?, imageSize: Int?, contentHash: String,
+                  sourceFilename: String? = nil) {
         self.id = id
         self.content = content
         self.sourceApp = sourceApp
@@ -63,5 +66,6 @@ struct ClipboardItem: Identifiable {
         self.characterCount = characterCount
         self.imageSize = imageSize
         self.contentHash = contentHash
+        self.sourceFilename = sourceFilename
     }
 }

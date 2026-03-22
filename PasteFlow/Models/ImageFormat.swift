@@ -6,5 +6,7 @@ enum ImageFormat: String, Codable {
     case jpeg
     case gif
     case bmp
+    case webp
+    case heic
     case pdf
 }

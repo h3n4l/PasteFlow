@@ -34,6 +34,13 @@ final class StorageService {
                           columns: ["createdAt"], ifNotExists: true)
             try db.create(index: "idx_content_type", on: ClipboardItemRecord.databaseTableName,
                           columns: ["contentType"], ifNotExists: true)
+
+            // Migration: add sourceFilename column
+            if try !db.columns(in: ClipboardItemRecord.databaseTableName).contains(where: { $0.name == "sourceFilename" }) {
+                try db.alter(table: ClipboardItemRecord.databaseTableName) { t in
+                    t.add(column: "sourceFilename", .text)
+                }
+            }
         }
     }
 
@@ -75,7 +82,8 @@ final class StorageService {
             createdAt: item.createdAt.timeIntervalSince1970,
             characterCount: item.characterCount,
             imageSize: item.imageSize,
-            contentHash: item.contentHash
+            contentHash: item.contentHash,
+            sourceFilename: item.sourceFilename
         )
 
         try dbQueue.write { db in
@@ -223,7 +231,8 @@ final class StorageService {
             contentType: contentType,
             characterCount: record.characterCount,
             imageSize: record.imageSize,
-            contentHash: record.contentHash
+            contentHash: record.contentHash,
+            sourceFilename: record.sourceFilename
         )
     }
 }

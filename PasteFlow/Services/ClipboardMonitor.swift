@@ -50,12 +50,31 @@ final class ClipboardMonitor {
         }
     }
 
+    private static let imageUTIToFormat: [String: ImageFormat] = [
+        "public.png": .png,
+        "public.jpeg": .jpeg,
+        "public.tiff": .tiff,
+        "com.compuserve.gif": .gif,
+        "com.microsoft.bmp": .bmp,
+        "org.webmproject.webp": .webp,
+        "public.heic": .heic,
+    ]
+
     private func readFiles(from pasteboard: NSPasteboard, sourceApp: String?) -> ClipboardItem? {
         guard let urls = pasteboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL] else {
             return nil
         }
         let fileURLs = urls.filter { $0.isFileURL }
         guard !fileURLs.isEmpty else { return nil }
+
+        // Single image file: read data from disk and treat as image
+        if fileURLs.count == 1,
+           let resourceValues = try? fileURLs[0].resourceValues(forKeys: [.typeIdentifierKey]),
+           let uti = resourceValues.typeIdentifier,
+           let format = Self.imageUTIToFormat[uti],
+           let data = try? Data(contentsOf: fileURLs[0]) {
+            return ClipboardItem(content: .image(data, format), sourceApp: sourceApp, contentType: .image, sourceFilename: fileURLs[0].lastPathComponent)
+        }
 
         let refs = fileURLs.map { url -> FileReference in
             let name = url.lastPathComponent
@@ -94,15 +113,17 @@ final class ClipboardMonitor {
     private func readImage(from pasteboard: NSPasteboard, sourceApp: String?) -> ClipboardItem? {
         let typeFormatMap: [(NSPasteboard.PasteboardType, ImageFormat)] = [
             (.png, .png),
+            (NSPasteboard.PasteboardType("public.jpeg"), .jpeg),
             (.tiff, .tiff),
+            (NSPasteboard.PasteboardType("com.compuserve.gif"), .gif),
+            (NSPasteboard.PasteboardType("com.microsoft.bmp"), .bmp),
+            (NSPasteboard.PasteboardType("org.webmproject.webp"), .webp),
+            (NSPasteboard.PasteboardType("public.heic"), .heic),
         ]
         for (pasteboardType, format) in typeFormatMap {
             if let data = pasteboard.data(forType: pasteboardType) {
                 return ClipboardItem(content: .image(data, format), sourceApp: sourceApp, contentType: .image)
             }
-        }
-        if let data = pasteboard.data(forType: .pdf) {
-            return ClipboardItem(content: .image(data, .pdf), sourceApp: sourceApp, contentType: .image)
         }
         return nil
     }
