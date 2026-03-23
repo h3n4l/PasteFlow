@@ -51,12 +51,11 @@ final class UpdateService: ObservableObject {
 
     init() {
         self.updater = AppUpdater(owner: "h3n4l", repo: "PasteFlow", provider: TolerantGithubReleaseProvider())
-        // Debug builds are signed with a development certificate that differs
-        // from the release build's signature, causing AppUpdater's code signing
-        // validation to fail. Skip the check so updates can be tested locally.
-        #if DEBUG
+        // Release builds on GitHub Actions are ad-hoc signed (no Developer ID
+        // certificate), so each build has a unique signature. AppUpdater's code
+        // signing validation rejects updates because the signatures never match.
+        // Skip validation until proper Developer ID signing is set up.
         self.updater.skipCodeSignValidation = true
-        #endif
         observeUpdaterState()
     }
 
