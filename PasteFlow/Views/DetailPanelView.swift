@@ -36,8 +36,9 @@ struct DetailPanelView: View {
     private func previewBlock(for item: ClipboardItem) -> some View {
         switch item.content {
         case .text(let text):
+            let displayText = text.count > 2500 ? String(text.prefix(2500)) + "…" : text
             ScrollView {
-                Text(text)
+                Text(displayText)
                     .font(.system(size: 11, design: item.contentType == .code ? .monospaced : .default))
                     .foregroundColor(Color(.textTertiary))
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -85,8 +86,8 @@ struct DetailPanelView: View {
     private func metadataSection(for item: ClipboardItem) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             switch item.content {
-            case .text(let text):
-                Text("\(item.contentType.rawValue.capitalized) \u{00B7} \(text.count) characters")
+            case .text:
+                Text("\(item.contentType.rawValue.capitalized) \u{00B7} \(item.characterCount ?? 0) characters")
                     .font(.system(size: 11)).foregroundColor(Color(.textSecondary))
             case .image(let data, let format):
                 Text("\(format.rawValue.uppercased()) \u{00B7} \(ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file))")
