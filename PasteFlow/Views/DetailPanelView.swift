@@ -36,7 +36,7 @@ struct DetailPanelView: View {
     private func previewBlock(for item: ClipboardItem) -> some View {
         switch item.content {
         case .text(let text):
-            let displayText = text.count > 2500 ? String(text.prefix(2500)) + "…" : text
+            let displayText = (item.characterCount ?? 0) > 2500 ? String(text.prefix(2500)) + "…" : text
             ScrollView {
                 Text(displayText)
                     .font(.system(size: 11, design: item.contentType == .code ? .monospaced : .default))
