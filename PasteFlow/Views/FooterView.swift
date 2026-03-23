@@ -11,6 +11,13 @@ struct FooterView: View {
             } else if !isAccessibilityGranted {
                 Text("Accessibility: off \u{2014} manual paste mode")
                     .font(.system(size: 11)).foregroundColor(Color(.textSecondary))
+            } else {
+                HStack(spacing: 10) {
+                    KeyCapHint(key: "↑", label: nil)
+                    KeyCapHint(key: "↓", label: "Navigate")
+                    KeyCapHint(key: "Enter", label: "Paste")
+                    KeyCapHint(key: "⌘1-9", label: "Quick paste")
+                }
             }
             Spacer()
             Text("\(itemCount) items").font(.system(size: 11)).foregroundColor(Color(.textSecondary))
@@ -19,4 +26,5 @@ struct FooterView: View {
         .background(Color(.backgroundPrimary))
         .overlay(Rectangle().frame(height: 1).foregroundColor(Color(.borderDivider)), alignment: .top)
     }
+
 }

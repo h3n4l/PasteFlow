@@ -14,9 +14,11 @@ struct SearchBarView: View {
                 .font(.system(size: 13))
                 .focused(isSearchFocused)
             Spacer()
-            Text("Cmd+Shift+V")
-                .font(.system(size: 11))
-                .foregroundColor(Color(.textSecondary))
+            HStack(spacing: 2) {
+                KeyCapHint(key: "⌘")
+                KeyCapHint(key: "⇧")
+                KeyCapHint(key: "V")
+            }
         }
         .padding(.horizontal, 12)
         .frame(height: 40)

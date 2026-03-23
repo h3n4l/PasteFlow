@@ -13,6 +13,7 @@ struct FilterRowView: View {
                 }
             }
             Spacer()
+            KeyCapHint(key: "Tab", label: "Filter")
         }
         .padding(.horizontal, 12).padding(.vertical, 6).frame(height: 32)
         .background(Color(.backgroundPrimary))
