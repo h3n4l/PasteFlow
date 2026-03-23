@@ -28,10 +28,12 @@ struct SettingsView: View {
     @AppStorage("retentionDays") private var retentionDays: Int = 30
     @AppStorage("launchAtLogin") private var launchAtLogin: Bool = false
     @State private var showClearConfirmation = false
+    @State private var isAccessibilityGranted = PasteSimulator.isAccessibilityGranted
     #if ENABLE_AUTO_UPDATE
     @State private var showUpdateConfirmation = false
     #endif
     private let retentionOptions = [7, 14, 30, 60, 90]
+    private let accessibilityTimer = Timer.publish(every: 2, on: .main, in: .common).autoconnect()
 
     var body: some View {
         TabView {
@@ -116,7 +118,7 @@ struct SettingsView: View {
             }
 
             SettingsRow("Accessibility") {
-                if PasteSimulator.isAccessibilityGranted {
+                if isAccessibilityGranted {
                     HStack(spacing: 4) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
@@ -137,7 +139,16 @@ struct SettingsView: View {
             }
 
             Spacer()
-        }.padding(.top, 20).padding(.horizontal, 24)
+        }
+        .padding(.top, 20).padding(.horizontal, 24)
+        .onReceive(accessibilityTimer) { _ in
+            let granted = PasteSimulator.isAccessibilityGranted
+            isAccessibilityGranted = granted
+            appState.isAccessibilityGranted = granted
+        }
+        .onAppear {
+            isAccessibilityGranted = PasteSimulator.isAccessibilityGranted
+        }
     }
 
     private var aboutTab: some View {
