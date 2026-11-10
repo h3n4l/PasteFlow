@@ -7,11 +7,14 @@ struct FilterRowView: View {
     ]
     var body: some View {
         HStack(spacing: 6) {
-            ForEach(filters, id: \.label) { filter in
-                FilterPill(label: filter.label, isActive: activeFilter == filter.type) {
-                    activeFilter = filter.type
+            HStack(spacing: 6) {
+                ForEach(filters, id: \.label) { filter in
+                    FilterPill(label: filter.label, isActive: activeFilter == filter.type) {
+                        activeFilter = filter.type
+                    }
                 }
             }
+            .panelFilterGroupChrome()
             Spacer()
             KeyCapHint(key: "Tab", label: "Filter")
         }
