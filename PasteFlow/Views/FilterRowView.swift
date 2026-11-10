@@ -16,8 +16,7 @@ struct FilterRowView: View {
             KeyCapHint(key: "Tab", label: "Filter")
         }
         .padding(.horizontal, 12).padding(.vertical, 6).frame(height: 32)
-        .background(Color(.backgroundPrimary))
-        .overlay(Rectangle().frame(height: 1).foregroundColor(Color(.borderDivider)), alignment: .bottom)
+        .panelFilterRowChrome()
     }
 }
 
@@ -29,9 +28,7 @@ private struct FilterPill: View {
         Button(action: action) {
             Text(label).font(.system(size: 11)).foregroundColor(Color(.accentPurple))
                 .padding(.horizontal, 10).padding(.vertical, 3)
-                .background(isActive ? Color(.backgroundPill) : Color.clear)
-                .clipShape(Capsule())
-                .overlay(Capsule().stroke(Color(.borderPill), lineWidth: 1))
+                .panelFilterPillChrome(isActive: isActive)
         }.buttonStyle(.plain)
     }
 }

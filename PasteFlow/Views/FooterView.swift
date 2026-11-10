@@ -23,7 +23,6 @@ struct FooterView: View {
             Text("\(itemCount) items").font(.system(size: 11)).foregroundColor(Color(.textSecondary))
         }
         .padding(.horizontal, 12).padding(.vertical, 7).frame(height: 27)
-        .background(Color(.backgroundPrimary))
         .overlay(Rectangle().frame(height: 1).foregroundColor(Color(.borderDivider)), alignment: .top)
     }
 

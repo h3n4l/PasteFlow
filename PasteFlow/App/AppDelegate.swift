@@ -18,9 +18,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let popoverView = PopoverView(appState: state) { [weak self] in
                 self?.panel?.hidePanel()
             }
-            let hostingView = NSHostingView(rootView: popoverView)
-            hostingView.frame = NSRect(x: 0, y: 0, width: 560, height: 456)
-            let panel = FloatingPanel(contentView: hostingView)
+            let panel = FloatingPanel(rootView: popoverView)
             self.panel = panel
 
             panel.updateAppearance(state.appearanceMode)

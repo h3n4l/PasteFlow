@@ -120,25 +120,14 @@ struct DetailPanelView: View {
 
     private func actionButtons(for item: ClipboardItem) -> some View {
         HStack(spacing: 6) {
-            Button(action: { onPaste(item) }) {
-                Text("Paste").font(.system(size: 11)).foregroundColor(Color(.accentPurple))
-                    .padding(.horizontal, 10).padding(.vertical, 4)
-                    .background(Color(.backgroundPill)).cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(.borderButton), lineWidth: 1))
-            }.buttonStyle(.plain)
+            Button("Paste") { onPaste(item) }
+                .buttonStyle(PanelActionButtonStyle(isProminent: true))
             if case .file = item.content {
-                Button(action: { onCopyPath?(item) }) {
-                    Text("Copy Path").font(.system(size: 11)).foregroundColor(Color(.accentPurple))
-                        .padding(.horizontal, 10).padding(.vertical, 4)
-                        .background(Color(.backgroundPill)).cornerRadius(6)
-                        .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(.borderButton), lineWidth: 1))
-                }.buttonStyle(.plain)
+                Button("Copy Path") { onCopyPath?(item) }
+                    .buttonStyle(PanelActionButtonStyle(isProminent: true))
             }
-            Button(action: { onDelete(item) }) {
-                Text("Delete").font(.system(size: 11)).foregroundColor(Color(.accentPurple))
-                    .padding(.horizontal, 10).padding(.vertical, 4).cornerRadius(6)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(Color(.borderButton), lineWidth: 1))
-            }.buttonStyle(.plain)
+            Button("Delete") { onDelete(item) }
+                .buttonStyle(PanelActionButtonStyle())
         }
     }
 }

@@ -26,7 +26,7 @@ struct ClipRowView: View {
         }
         .padding(.horizontal, 6).padding(.vertical, 7).frame(height: 44)
         .background(
-            RoundedRectangle(cornerRadius: 6)
+            RoundedRectangle(cornerRadius: PanelSkin.selectionCornerRadius)
                 .fill(isSelected ? Color(.backgroundSelected) : Color.clear)
         )
         // Inset the selection highlight; the row content stays 12pt from the list edge.
