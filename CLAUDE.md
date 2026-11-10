@@ -21,7 +21,7 @@ Menu bar app (LSUIElement) with a global hotkey (`Cmd+Shift+V`) that shows a cen
 - **ClipboardMonitor** polls NSPasteboard every 0.5s for new content
 - **HotkeyService** registers global hotkey via Carbon API
 - **PasteSimulator** copies to pasteboard and simulates Cmd+V via CGEvent
-- **FloatingPanel** (NSPanel subclass) hosts all SwiftUI views via NSHostingView
+- **FloatingPanel** (NSPanel subclass) hosts all SwiftUI views via NSHostingView, on a translucent NSVisualEffectView background
 
 ## Project Structure
 
@@ -33,7 +33,7 @@ PasteFlow/
   Services/               — ClipboardMonitor, StorageService, HotkeyService, PasteSimulator
   Views/                  — PopoverView, SearchBarView, FilterRowView, ClipListView,
                             ClipRowView, DetailPanelView, FooterView, SettingsView,
-                            FloatingPanel (NSPanel)
+                            PanelSkin (style-specific chrome), FloatingPanel (NSPanel)
   Utilities/              — ContentClassifier, Extensions (Date, Color helpers)
   Assets.xcassets/        — App icon, menu bar icon, accent color
 PasteFlowTests/           — Unit tests (Models/, Services/, Utilities/)
@@ -69,6 +69,8 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
 - Follow Swift naming conventions (camelCase for properties/methods, PascalCase for types)
 - Each view gets its own file
 - State flows through AppState — views observe it via @ObservedObject
+- Panel views do not paint a background: FloatingPanel supplies the translucent material, so the colors in `Assets.xcassets/Colors` use alpha to stay legible over it
+- Styling that belongs to a visual style rather than to layout (control chrome, dividers under the top bar, selection radius) lives in `Views/PanelSkin.swift`; keep OS-version checks out of the views
 - Images stored on disk at `~/Library/Application Support/PasteFlow/images/`
 - Database at `~/Library/Application Support/PasteFlow/clipboard.db`
 - Content types auto-detected by ContentClassifier (URL → link, code heuristics → code, else → text)

@@ -6,12 +6,8 @@ struct PopoverView: View {
     var onDismiss: () -> Void
 
     var body: some View {
+        // No background here: FloatingPanel provides the translucent material behind this view.
         VStack(spacing: 0) {
-            SearchBarView(searchText: $appState.searchText, isSearchFocused: $isSearchFocused)
-            FilterRowView(activeFilter: Binding(
-                get: { appState.activeFilter },
-                set: { appState.setFilter($0) }
-            ))
             HStack(spacing: 0) {
                 ClipListView(appState: appState, onItemActivate: { item in pasteAndDismiss(item) })
                 DetailPanelView(
@@ -20,7 +16,15 @@ struct PopoverView: View {
                     onDelete: { item in appState.deleteItem(item) },
                     onCopyPath: { item in appState.copyPathItem(item) }
                 ).frame(width: 220)
-            }.frame(maxHeight: .infinity)
+            }
+            .frame(maxHeight: .infinity)
+            .panelTopBar {
+                SearchBarView(searchText: $appState.searchText, isSearchFocused: $isSearchFocused)
+                FilterRowView(activeFilter: Binding(
+                    get: { appState.activeFilter },
+                    set: { appState.setFilter($0) }
+                ))
+            }
             FooterView(
                 itemCount: appState.totalItemCount,
                 statusMessage: appState.statusMessage,
@@ -28,9 +32,6 @@ struct PopoverView: View {
             )
         }
         .frame(width: 560, height: 456)
-        .background(Color(.backgroundPrimary))
-        .cornerRadius(12)
-        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(.borderDivider), lineWidth: 1))
         .onChange(of: appState.isPanelVisible) { visible in
             if visible {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {

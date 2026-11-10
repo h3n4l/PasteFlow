@@ -11,9 +11,10 @@ final class FloatingPanel: NSPanel {
 
     private var localMonitor: Any?
 
-    init(contentView: NSView) {
+    init<Content: View>(rootView: Content) {
+        let frame = NSRect(x: 0, y: 0, width: 560, height: 456)
         super.init(
-            contentRect: NSRect(x: 0, y: 0, width: 560, height: 456),
+            contentRect: frame,
             styleMask: [.nonactivatingPanel, .titled, .fullSizeContentView],
             backing: .buffered, defer: false
         )
@@ -21,6 +22,9 @@ final class FloatingPanel: NSPanel {
         self.level = .floating
         self.titleVisibility = .hidden
         self.titlebarAppearsTransparent = true
+        self.titlebarSeparatorStyle = .none
+        // The hidden title bar lies over the search row; keep it from dragging the panel.
+        self.isMovable = false
         self.isMovableByWindowBackground = false
         self.isReleasedWhenClosed = false
         self.hidesOnDeactivate = false
@@ -28,10 +32,23 @@ final class FloatingPanel: NSPanel {
         self.backgroundColor = .clear
         self.isOpaque = false
         self.hasShadow = true
-        self.contentView = contentView
-        self.contentView?.wantsLayer = true
-        self.contentView?.layer?.cornerRadius = 12
-        self.contentView?.layer?.masksToBounds = true
+
+        // The panel's background is a blur material that lets the desktop show through.
+        // It fills the window, so the system clips it to the window's own rounded corners.
+        let material = NSVisualEffectView(frame: frame)
+        material.material = .popover
+        material.blendingMode = .behindWindow
+        // The panel never makes PasteFlow the active app; without this the material would look inactive.
+        material.state = .active
+
+        let hostingView = NSHostingView(rootView: rootView)
+        // Lay the content out edge to edge. With the default safe area it would start below
+        // the hidden title bar and no longer fit the panel.
+        hostingView.safeAreaRegions = []
+        hostingView.frame = material.bounds
+        hostingView.autoresizingMask = [.width, .height]
+        material.addSubview(hostingView)
+        self.contentView = material
         // Default to system appearance; updated by updateAppearance()
     }
 

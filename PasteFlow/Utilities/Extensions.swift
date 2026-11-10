@@ -37,5 +37,5 @@ enum AppearanceMode: String, CaseIterable {
 }
 
 // Semantic colors are defined in Assets.xcassets/Colors/ and accessed via
-// Xcode-generated ColorResource symbols, e.g. Color(.backgroundPrimary).
+// Xcode-generated ColorResource symbols, e.g. Color(.textPrimary).
 // No manual Color extension needed.

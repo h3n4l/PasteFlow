@@ -20,9 +20,6 @@ struct SearchBarView: View {
                 KeyCapHint(key: "V")
             }
         }
-        .padding(.horizontal, 12)
-        .frame(height: 40)
-        .background(Color(.backgroundPrimary))
-        .overlay(Rectangle().frame(height: 1).foregroundColor(Color(.borderDivider)), alignment: .bottom)
+        .panelSearchFieldChrome()
     }
 }

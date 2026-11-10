@@ -36,7 +36,7 @@ struct ClipListView: View {
                 }
             }
         }
-        .frame(width: 340).background(Color(.backgroundPrimary))
+        .frame(width: 340)
         .overlay(Rectangle().frame(width: 1).foregroundColor(Color(.borderDivider)), alignment: .trailing)
     }
 }
