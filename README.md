@@ -19,11 +19,19 @@ Download the latest `.dmg` from [Releases](https://github.com/h3n4l/PasteFlow/re
 ### Bypass Gatekeeper
 
 > [!IMPORTANT]
-> Since PasteFlow is not notarized with Apple, macOS will block it on first launch. After dragging to Applications, open **Terminal** (search "Terminal" in Spotlight or find it in Applications → Utilities) and paste this command:
-> ```bash
-> sudo xattr -rd com.apple.quarantine /Applications/PasteFlow.app
-> ```
-> Press Enter and type your Mac password when prompted. You only need to do this once.
+> Since PasteFlow is not notarized with Apple, macOS will block it on first launch. You only need to allow it once.
+
+![Allow PasteFlow in System Settings](assets/screenshots/open-anyway.png)
+
+1. Open PasteFlow from Applications. macOS warns that it could not verify the app — click **Done** (**Cancel** or **OK** on older macOS), not **Move to Trash**.
+2. Open **System Settings → Privacy & Security**, scroll down to **Security**, and click **Open Anyway** next to "PasteFlow was blocked". The button is only there for about an hour after step 1.
+3. In the dialog that follows, click **Open Anyway** again, then confirm with your Mac password or Touch ID.
+
+Comfortable with the Terminal? This one command does the same thing:
+
+```bash
+sudo xattr -rd com.apple.quarantine /Applications/PasteFlow.app
+```
 
 ### First Launch
 
