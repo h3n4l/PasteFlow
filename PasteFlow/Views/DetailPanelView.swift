@@ -121,10 +121,10 @@ struct DetailPanelView: View {
     private func actionButtons(for item: ClipboardItem) -> some View {
         HStack(spacing: 6) {
             Button("Paste") { onPaste(item) }
-                .buttonStyle(PanelActionButtonStyle(isProminent: true))
+                .buttonStyle(PanelActionButtonStyle(kind: .primary))
             if case .file = item.content {
                 Button("Copy Path") { onCopyPath?(item) }
-                    .buttonStyle(PanelActionButtonStyle(isProminent: true))
+                    .buttonStyle(PanelActionButtonStyle(kind: .secondary))
             }
             Button("Delete") { onDelete(item) }
                 .buttonStyle(PanelActionButtonStyle())
