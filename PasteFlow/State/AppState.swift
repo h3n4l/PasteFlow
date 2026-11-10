@@ -4,7 +4,17 @@ import os.log
 
 final class AppState: ObservableObject {
     @Published var clipboardItems: [ClipboardItem] = []
+    /// The item shown in the detail pane. Setting it directly makes the panel jump there;
+    /// `select(_:)`, `selectNext()` and `selectPrevious()` make it glide.
     @Published var selectedItem: ClipboardItem?
+    /// Goes up each time the user moves the selection. The panel animates a selection change
+    /// only when this changes with it, so the list resetting the selection does not animate.
+    @Published private(set) var selectionMoves = 0
+    /// Goes up each time the list changes in a way the panel should animate: a delete, a filter
+    /// change or a search. Reloads without it, like the one each time the panel opens, appear at once.
+    @Published private(set) var listChanges = 0
+    /// The item being pasted, from the moment it is chosen until the panel has closed.
+    @Published var pastingItemID: UUID?
     @Published var searchText: String = ""
     @Published var activeFilter: ContentType?
     @Published var totalItemCount: Int = 0
@@ -75,13 +85,15 @@ final class AppState: ObservableObject {
         searchDebounce = $searchText
             .debounce(for: .milliseconds(200), scheduler: RunLoop.main)
             .sink { [weak self] _ in
-                self?.reloadItems()
+                self?.reloadItems(animated: true)
             }
     }
 
     var filteredItems: [ClipboardItem] { clipboardItems }
 
-    func reloadItems() {
+    /// Loads the first page of items for the current filter and search.
+    /// Pass `animated` when the user caused the change while looking at the list.
+    func reloadItems(animated: Bool = false) {
         do {
             clipboardItems = try storage.fetchItems(
                 filter: activeFilter,
@@ -93,6 +105,7 @@ final class AppState: ObservableObject {
             if selectedItem == nil || !clipboardItems.contains(where: { $0.id == selectedItem?.id }) {
                 selectedItem = clipboardItems.first
             }
+            if animated { listChanges += 1 }
         } catch {
             logger.error("Failed to reload items: \(error.localizedDescription)")
             statusMessage = "Failed to load clipboard history"
@@ -100,12 +113,17 @@ final class AppState: ObservableObject {
     }
 
     func loadMoreItems() {
+        appendItems(limit: pageSize)
+    }
+
+    /// Loads up to `limit` more items after the ones already in the list.
+    private func appendItems(limit: Int) {
         guard hasMoreItems else { return }
         do {
             let moreItems = try storage.fetchItems(
                 filter: activeFilter,
                 search: searchText.isEmpty ? nil : searchText,
-                limit: pageSize, offset: clipboardItems.count
+                limit: limit, offset: clipboardItems.count
             )
             clipboardItems.append(contentsOf: moreItems)
             hasMoreItems = clipboardItems.count < totalItemCount
@@ -116,7 +134,7 @@ final class AppState: ObservableObject {
 
     func setFilter(_ filter: ContentType?) {
         activeFilter = filter
-        reloadItems()
+        reloadItems(animated: true)
     }
 
     private let filterOrder: [ContentType?] = [nil, .text, .link, .code, .image, .file]
@@ -130,7 +148,21 @@ final class AppState: ObservableObject {
     func deleteItem(_ item: ClipboardItem) {
         do {
             try storage.delete(item.id)
-            reloadItems()
+            guard let index = clipboardItems.firstIndex(where: { $0.id == item.id }) else {
+                reloadItems(animated: true)
+                return
+            }
+            // Take the item out of the loaded list rather than reloading, so the list keeps its place.
+            clipboardItems.remove(at: index)
+            if selectedItem?.id == item.id {
+                // The selection stays where it was: on the item that moved into the deleted one's place.
+                selectedItem = index < clipboardItems.count ? clipboardItems[index] : clipboardItems.last
+            }
+            totalItemCount = max(totalItemCount - 1, 0)
+            // Load one item in its place. Otherwise deleting again and again would empty the list
+            // while older items are still stored: the row that triggers loading more has already appeared.
+            appendItems(limit: 1)
+            listChanges += 1
         } catch {
             logger.error("Failed to delete item: \(error.localizedDescription)")
             statusMessage = "Failed to delete item"
@@ -145,12 +177,19 @@ final class AppState: ObservableObject {
         PasteSimulator.copyPath(item, clipboardMonitor: clipboardMonitor)
     }
 
+    /// Selects an item the user picked, so the panel glides to it.
+    func select(_ item: ClipboardItem) {
+        guard selectedItem?.id != item.id else { return }
+        selectedItem = item
+        selectionMoves += 1
+    }
+
     func selectNext() {
         guard !clipboardItems.isEmpty else { return }
         if let current = selectedItem,
            let index = clipboardItems.firstIndex(where: { $0.id == current.id }),
            index + 1 < clipboardItems.count {
-            selectedItem = clipboardItems[index + 1]
+            select(clipboardItems[index + 1])
         }
     }
 
@@ -159,7 +198,7 @@ final class AppState: ObservableObject {
         if let current = selectedItem,
            let index = clipboardItems.firstIndex(where: { $0.id == current.id }),
            index > 0 {
-            selectedItem = clipboardItems[index - 1]
+            select(clipboardItems[index - 1])
         }
     }
 

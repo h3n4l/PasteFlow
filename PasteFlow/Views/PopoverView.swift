@@ -3,16 +3,18 @@ import SwiftUI
 struct PopoverView: View {
     @ObservedObject var appState: AppState
     @FocusState private var isSearchFocused: Bool
-    var onDismiss: () -> Void
+    /// Pastes an item and closes the panel.
+    var onPaste: (ClipboardItem) -> Void
 
     var body: some View {
         // No background here: FloatingPanel provides the translucent material behind this view.
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                ClipListView(appState: appState, onItemActivate: { item in pasteAndDismiss(item) })
+                ClipListView(appState: appState, onItemActivate: onPaste)
                 DetailPanelView(
                     item: appState.selectedItem,
-                    onPaste: { item in pasteAndDismiss(item) },
+                    changeCount: appState.selectionMoves + appState.listChanges,
+                    onPaste: onPaste,
                     onDelete: { item in appState.deleteItem(item) },
                     onCopyPath: { item in appState.copyPathItem(item) }
                 ).frame(width: 220)
@@ -27,6 +29,7 @@ struct PopoverView: View {
             }
             FooterView(
                 itemCount: appState.totalItemCount,
+                listChanges: appState.listChanges,
                 statusMessage: appState.statusMessage,
                 isAccessibilityGranted: appState.isAccessibilityGranted
             )
@@ -39,10 +42,5 @@ struct PopoverView: View {
                 }
             }
         }
-    }
-
-    private func pasteAndDismiss(_ item: ClipboardItem) {
-        onDismiss()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { appState.pasteItem(item) }
     }
 }
