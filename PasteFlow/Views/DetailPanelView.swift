@@ -9,16 +9,17 @@ struct DetailPanelView: View {
     var body: some View {
         if let item = item {
             VStack(alignment: .leading, spacing: 10) {
-                Text("PREVIEW")
-                    .font(.system(size: 11, weight: .bold))
+                Text("Preview")
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(Color(.textTertiary))
-                    .tracking(0.5)
+                // The preview gets first claim on the pane's height; the actions stay at the bottom.
                 previewBlock(for: item)
+                    .layoutPriority(1)
                 metadataSection(for: item)
+                Spacer(minLength: 0)
                 actionButtons(for: item)
-                Spacer()
             }
-            .padding(6)
+            .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             VStack {
@@ -37,16 +38,13 @@ struct DetailPanelView: View {
         switch item.content {
         case .text(let text):
             let displayText = (item.characterCount ?? 0) > 2500 ? String(text.prefix(2500)) + "…" : text
-            ScrollView {
+            fittedPreview {
                 Text(displayText)
                     .font(.system(size: 11, design: item.contentType == .code ? .monospaced : .default))
                     .foregroundColor(Color(.textTertiary))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(8)
             }
-            .frame(maxHeight: 120)
-            .background(Color(.backgroundPreview))
-            .cornerRadius(8)
         case .image(let data, _):
             if let nsImage = NSImage(data: data) {
                 Image(nsImage: nsImage)
@@ -56,7 +54,7 @@ struct DetailPanelView: View {
                     .cornerRadius(8)
             }
         case .file(let refs):
-            ScrollView {
+            fittedPreview {
                 VStack(alignment: .leading, spacing: 4) {
                     ForEach(refs, id: \.path) { ref in
                         HStack(spacing: 6) {
@@ -77,10 +75,19 @@ struct DetailPanelView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(8)
             }
-            .frame(maxHeight: 120)
-            .background(Color(.backgroundPreview))
-            .cornerRadius(8)
         }
+    }
+
+    /// A preview block as tall as its content, which scrolls only when the content
+    /// is taller than the space the pane can give it.
+    private func fittedPreview<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        let content = content()
+        return ViewThatFits(in: .vertical) {
+            content
+            ScrollView { content }
+        }
+        .background(Color(.backgroundPreview))
+        .cornerRadius(8)
     }
 
     private func metadataSection(for item: ClipboardItem) -> some View {

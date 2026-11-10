@@ -21,13 +21,16 @@ struct ClipRowView: View {
                     .foregroundColor(isSelected ? Color(.accentBlue).opacity(0.6) : Color(.textSecondary))
             }.frame(maxWidth: .infinity, alignment: .leading)
             if let index = shortcutIndex, index < 9 {
-                Text("Cmd+\(index + 1)")
-                    .font(.system(size: 11))
-                    .foregroundColor(isSelected ? Color(.accentBlue).opacity(0.5) : Color(.textSecondary))
+                KeyCapHint(key: "⌘\(index + 1)")
             }
         }
-        .padding(.horizontal, 12).padding(.vertical, 7).frame(height: 44)
-        .background(isSelected ? Color(.backgroundSelected) : Color(.backgroundPrimary))
+        .padding(.horizontal, 6).padding(.vertical, 7).frame(height: 44)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(isSelected ? Color(.backgroundSelected) : Color.clear)
+        )
+        // Inset the selection highlight; the row content stays 12pt from the list edge.
+        .padding(.horizontal, 6)
     }
 
     private var iconName: String {
