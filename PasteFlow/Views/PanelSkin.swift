@@ -73,26 +73,27 @@ extension View {
     }
 
     /// Decorates the group of filter pills without changing its size or position.
+    /// With Liquid Glass the group's capsule swells a little while one of its pills is pressed.
     @ViewBuilder
-    func panelFilterGroupChrome() -> some View {
+    func panelFilterGroupChrome(isPressed: Bool) -> some View {
         if #available(macOS 26.0, *), PanelSkin.usesGlass {
             self
                 .padding(.horizontal, 4).padding(.vertical, 3)
                 .glassEffect(.regular, in: .capsule)
+                .panelPressScale(PanelMotion.glassPressScale, isPressed: isPressed)
                 .padding(.horizontal, -4).padding(.vertical, -3)
         } else {
             self
         }
     }
 
-    /// Fill, shape and outline of one filter pill.
-    func panelFilterPillChrome(isActive: Bool) -> some View {
+    /// Shape and outline of one filter pill. The active pill's fill is not drawn here: the
+    /// filter row draws one fill and moves it from pill to pill.
+    func panelFilterPillChrome() -> some View {
         self
-            .background(isActive ? Color(.backgroundPill) : Color.clear)
-            .clipShape(Capsule())
             // On glass the group's capsule frames the pills, so they need no outline of their own.
             .overlay(Capsule().stroke(Color(.borderPill), lineWidth: 1).opacity(PanelSkin.usesGlass ? 0 : 1))
-            // An inactive pill has no fill, so make the whole capsule clickable, not just the text.
+            // A pill has no fill of its own, so make the whole capsule clickable, not just the text.
             .contentShape(Capsule())
     }
 }
@@ -119,6 +120,7 @@ private struct PanelActionButtonBody: View {
     let kind: PanelActionButtonStyle.Kind
     let configuration: ButtonStyleConfiguration
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         Group {
@@ -138,7 +140,9 @@ private struct PanelActionButtonBody: View {
                     .contentShape(Rectangle())
             }
         }
-        .opacity(configuration.isPressed ? 0.6 : 1)
+        // Pressing shrinks the button. With Reduce Motion on it dims instead.
+        .panelPressScale(PanelMotion.controlPressScale, isPressed: configuration.isPressed)
+        .opacity(configuration.isPressed && reduceMotion ? 0.6 : 1)
     }
 
     private var label: some View {

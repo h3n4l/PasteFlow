@@ -2,6 +2,8 @@ import SwiftUI
 
 struct DetailPanelView: View {
     let item: ClipboardItem?
+    /// Changes whenever the item changed in a way the pane should animate, rather than swap at once.
+    let changeCount: Int
     let onPaste: (ClipboardItem) -> Void
     let onDelete: (ClipboardItem) -> Void
     let onCopyPath: ((ClipboardItem) -> Void)?
@@ -12,12 +14,24 @@ struct DetailPanelView: View {
                 Text("Preview")
                     .font(.system(size: 11, weight: .semibold))
                     .foregroundColor(Color(.textTertiary))
-                // The preview gets first claim on the pane's height; the actions stay at the bottom.
-                previewBlock(for: item)
-                    .layoutPriority(1)
-                metadataSection(for: item)
-                Spacer(minLength: 0)
+                // The header and the actions stay put; what is between them cross-fades from one item
+                // to the next. In the stack both items are briefly present, one on top of the other.
+                ZStack(alignment: .topLeading) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        // The preview gets first claim on the pane's height.
+                        previewBlock(for: item)
+                            .layoutPriority(1)
+                        metadataSection(for: item)
+                    }
+                    .id(item.id)
+                    .transition(PanelMotion.detailTransition)
+                }
+                // Takes the height the preview leaves over, which keeps the actions at the bottom.
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                // A fade is not movement, so it stays with Reduce Motion on.
+                .panelAnimation(PanelMotion.detailChange, reduced: PanelMotion.detailChange, value: changeCount)
                 actionButtons(for: item)
+                    .panelAnimation(PanelMotion.detailChange, value: changeCount)
             }
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -125,6 +139,7 @@ struct DetailPanelView: View {
             if case .file = item.content {
                 Button("Copy Path") { onCopyPath?(item) }
                     .buttonStyle(PanelActionButtonStyle(kind: .secondary))
+                    .transition(PanelMotion.detailButtonTransition)
             }
             Button("Delete") { onDelete(item) }
                 .buttonStyle(PanelActionButtonStyle())

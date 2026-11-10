@@ -72,6 +72,7 @@ DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer \
 - Panel views do not paint a background: FloatingPanel supplies the translucent material, so the colors in `Assets.xcassets/Colors` use alpha to stay legible over it
 - Styling that belongs to a visual style rather than to layout (control chrome, dividers under the top bar, selection radius) lives in `Views/PanelSkin.swift`; keep OS-version checks out of the views
 - The panel has two looks sharing one layout: Liquid Glass on macOS 26+ (glass only on the search field and filter group, per Apple's guidance) and the older look before that. A layout change must work in both; launch with `-PanelLegacySkin YES` to see the older look on a current macOS
+- The panel's animations and their timings live in `PanelMotion`; views take them from there (`panelAnimation`) rather than defining their own. With Reduce Motion on, nothing slides or scales and only short fades remain. Launch with `-PanelSlowMotion 5` to watch the animations at a fifth of their speed
 - Images stored on disk at `~/Library/Application Support/PasteFlow/images/`
 - Database at `~/Library/Application Support/PasteFlow/clipboard.db`
 - Content types auto-detected by ContentClassifier (URL → link, code heuristics → code, else → text)

@@ -15,11 +15,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         do {
             let state = appState
 
-            let popoverView = PopoverView(appState: state) { [weak self] in
-                self?.panel?.hidePanel()
+            let popoverView = PopoverView(appState: state) { [weak self] item in
+                self?.pasteAndDismiss(item)
             }
             let panel = FloatingPanel(rootView: popoverView)
             self.panel = panel
+            panel.onHide = { [weak state] in state?.isPanelVisible = false }
 
             panel.updateAppearance(state.appearanceMode)
             state.$appearanceMode
@@ -33,27 +34,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             panel.onArrowUp = { [weak state] in state?.selectPrevious() }
             panel.onArrowDown = { [weak state] in state?.selectNext() }
             panel.onEnter = { [weak self, weak state] in
-                if let item = state?.selectedItem {
-                    self?.panel?.hidePanel()
-                    state?.isPanelVisible = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                        state?.pasteItem(item)
-                    }
-                }
+                if let item = state?.selectedItem { self?.pasteAndDismiss(item) }
             }
-            panel.onEsc = { [weak self] in
-                self?.panel?.hidePanel()
-                self?.appState.isPanelVisible = false
-            }
+            panel.onEsc = { [weak self] in self?.panel?.hidePanel() }
             panel.onCmdNumber = { [weak self, weak state] num in
                 let index = num - 1
                 if let items = state?.filteredItems,
                    index >= 0, index < items.count {
-                    self?.panel?.hidePanel()
-                    state?.isPanelVisible = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                        state?.pasteItem(items[index])
-                    }
+                    self?.pasteAndDismiss(items[index])
                 }
             }
 
@@ -85,13 +73,31 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func togglePanel() {
-        panel?.toggle()
-        let visible = panel?.isVisible == true
+        // A paste is already closing the panel; let it finish.
+        guard let panel, appState.pastingItemID == nil else { return }
+        panel.toggle()
+        let visible = panel.isPresented
         appState.isPanelVisible = visible
         if visible {
             appState.reloadItems()
             appState.selectedItem = appState.clipboardItems.first
             appState.isAccessibilityGranted = PasteSimulator.isAccessibilityGranted
+        }
+    }
+
+    /// Lights up the item's row to confirm the choice, closes the panel, then pastes the item
+    /// into the app underneath.
+    private func pasteAndDismiss(_ item: ClipboardItem) {
+        // Ignore a second Enter or click while the first paste is still closing the panel.
+        guard let panel, panel.isPresented, appState.pastingItemID == nil else { return }
+        appState.pastingItemID = item.id
+        DispatchQueue.main.asyncAfter(deadline: .now() + PanelMotion.pasteFlashDuration) { [weak self] in
+            panel.hidePanel {
+                guard let self else { return }
+                self.appState.pastingItemID = nil
+                // The panel is off screen now. Give the app underneath a moment to take the keyboard back.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { self.appState.pasteItem(item) }
+            }
         }
     }
 

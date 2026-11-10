@@ -1,36 +1,46 @@
 import SwiftUI
 
 struct ClipRowView: View {
+    /// Every row is this tall, which is what lets the list place the selection highlight by row number.
+    static let height: CGFloat = 44
+    /// How far the selection highlight is inset from the list's edges.
+    static let highlightInset: CGFloat = 6
+
     let item: ClipboardItem
     let isSelected: Bool
+    /// Whether this row is the one being pasted, which lights it up.
+    let isPasting: Bool
     let shortcutIndex: Int?
+    let action: () -> Void
+
+    @State private var isHovered = false
 
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: iconName)
-                .font(.system(size: 12))
-                .foregroundColor(isSelected ? Color(.accentBlue) : Color(.textSecondary))
-                .frame(width: 12, height: 12)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(previewText)
-                    .font(.system(size: 13))
-                    .foregroundColor(isSelected ? Color(.accentBlue) : Color(.textPrimary))
-                    .lineLimit(1).truncationMode(.tail)
-                Text(metadataText)
-                    .font(.system(size: 11))
-                    .foregroundColor(isSelected ? Color(.accentBlue).opacity(0.6) : Color(.textSecondary))
-            }.frame(maxWidth: .infinity, alignment: .leading)
-            if let index = shortcutIndex, index < 9 {
-                KeyCapHint(key: "⌘\(index + 1)")
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: iconName)
+                    .font(.system(size: 12))
+                    .foregroundColor(isSelected ? Color(.accentBlue) : Color(.textSecondary))
+                    .frame(width: 12, height: 12)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(previewText)
+                        .font(.system(size: 13))
+                        .foregroundColor(isSelected ? Color(.accentBlue) : Color(.textPrimary))
+                        .lineLimit(1).truncationMode(.tail)
+                    Text(metadataText)
+                        .font(.system(size: 11))
+                        .foregroundColor(isSelected ? Color(.accentBlue).opacity(0.6) : Color(.textSecondary))
+                }.frame(maxWidth: .infinity, alignment: .leading)
+                if let index = shortcutIndex, index < 9 {
+                    KeyCapHint(key: "⌘\(index + 1)")
+                }
             }
+            .padding(.horizontal, 6).padding(.vertical, 7).frame(height: Self.height)
         }
-        .padding(.horizontal, 6).padding(.vertical, 7).frame(height: 44)
-        .background(
-            RoundedRectangle(cornerRadius: PanelSkin.selectionCornerRadius)
-                .fill(isSelected ? Color(.backgroundSelected) : Color.clear)
-        )
-        // Inset the selection highlight; the row content stays 12pt from the list edge.
-        .padding(.horizontal, 6)
+        .buttonStyle(RowButtonStyle(isHovered: isHovered, isPasting: isPasting))
+        .onHover { isHovered = $0 }
+        // The row content stays 12pt from the list edge; its tint lines up with the selection highlight.
+        .padding(.horizontal, Self.highlightInset)
     }
 
     private var iconName: String {
@@ -73,5 +83,29 @@ struct ClipRowView: View {
             let totalSize = refs.reduce(Int64(0)) { $0 + $1.size }
             return "\(timeAgo) \u{00B7} \(refs.count) files \u{00B7} \(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file)) total"
         }
+    }
+}
+
+/// A row's reaction to the pointer and to being pasted. The selection highlight is not drawn
+/// here: the list draws one highlight and moves it from row to row.
+private struct RowButtonStyle: ButtonStyle {
+    let isHovered: Bool
+    let isPasting: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .panelPressScale(PanelMotion.rowPressScale, isPressed: configuration.isPressed)
+            .background(
+                RoundedRectangle(cornerRadius: PanelSkin.selectionCornerRadius)
+                    .fill(Color(.textPrimary).opacity(isHovered ? 0.06 : 0))
+                    .animation(PanelMotion.hover, value: isHovered)
+            )
+            .background(
+                RoundedRectangle(cornerRadius: PanelSkin.selectionCornerRadius)
+                    .fill(Color(.backgroundPasteFlash).opacity(isPasting ? 1 : 0))
+                    .animation(PanelMotion.pasteFlash, value: isPasting)
+            )
+            // The whole row is clickable, not just its text.
+            .contentShape(Rectangle())
     }
 }
